@@ -45,8 +45,8 @@ Locked in 2026-07-31. Modules 0-7 alone produce a fully working, tested, resume-
 
 | # | Module | Status | Covers |
 |---|---|---|---|
-| 0 | Project Bootstrap | In progress | Spring Initializr, Gradle Kotlin DSL structure, running the app, `application.yml` vs `AndroidManifest`, git init + first push |
-| 1 | Spring Core & DI | Not started | IoC container, `@Component`/`@Service`/`@Repository`/`@Configuration`, constructor injection vs Hilt, bean scopes, profiles (dev/prod) vs Android build variants |
+| 0 | Project Bootstrap | Done | Spring Initializr, Gradle Kotlin DSL structure, running the app, `application.yml` vs `AndroidManifest`, git init + first push |
+| 1 | Spring Core & DI | Done | IoC container, `@Component`/`@Service`/`@Repository`/`@Configuration`, constructor injection vs Hilt, bean scopes, profiles (dev/prod) vs Android build variants |
 | 2 | REST Layer | Not started | `@RestController`, mapping annotations, path/query params, `ResponseEntity`, global exception handling (`@ControllerAdvice`) |
 | 3 | Persistence Basics | Not started | PostgreSQL via docker-compose, JPA `@Entity` vs Room `@Entity`, Spring Data JPA repos vs Room DAOs, schema migrations (Flyway) |
 | 4 | IronTrail Domain Modeling | Not started | Translate Android domain models (Split, WorkoutDay, Template, Session, Set, PR, Exercise, Profile) into normalized, multi-user JPA entities with ownership |
@@ -58,6 +58,8 @@ Locked in 2026-07-31. Modules 0-7 alone produce a fully working, tested, resume-
 | 10 | AWS Deployment | Not started | ECS/EC2/Elastic Beanstalk choice, RDS, secrets, live URL |
 
 Deferred (only if time allows after Module 10): OpenAPI/Swagger docs, pagination/rate-limiting, offline-first sync design for the future Android client.
+
+**Current state (2026-07-31):** `GET /api/v1/health` is live — `HealthService`/`HealthController` in `com.irontrail.api.health`, package-by-feature layout (each feature owns its own controller/service/etc., cross-cutting stuff goes in `common`/`config`). Versioning is per-controller (`@RequestMapping("/v1/...")`), not global — `server.servlet.context-path` is just `/api`. `ApiApplication.kt` currently excludes `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration` (also flagged with a `TODO` in the code) because no DB is wired up yet — **remove that exclusion as part of Module 3**, it's a temporary placeholder, not a real decision to skip persistence config.
 
 ## Environment
 
@@ -73,12 +75,13 @@ This is a learning project. Sagar is a senior Android developer new to Spring Bo
 
 1. **Theory before code, always.** Before any code: explain why the concept exists (what problem it solves), how it works internally, how it maps to Android (table below), and when to use it vs. alternatives.
 2. **Explain every new annotation**: what it does, why it exists, what breaks if omitted, common mistakes.
-3. **No MCQ quizzes.** Sagar found them low-value on pure theory (2026-07-31) — verify understanding through code review and having him explain things back instead, not multiple-choice questions.
-4. **One file at a time.** Explain the file's purpose → ask what should go in it → provide content → wait for confirmation it's created and reviewed → ask for it explained back in his own words → only then move on. Never hand over multiple files at once.
-5. **No copy-paste learning.** Ask him to predict code before revealing it. Make him explain concepts back. Periodically re-quiz concepts from earlier phases to reinforce retention.
+3. **No MCQ quizzes, and don't ask him to explain concepts back either** (both dropped 2026-07-31 — low-value for him). Instead, after covering a concept, present it as a short self-answered interview Q&A ("Interview Q: ... / A: ...") — models a good interview answer without putting him on the spot.
+4. **One file at a time.** Explain the file's purpose → ask what should go in it → provide content → wait for confirmation it's created and reviewed → only then move on. Never hand over multiple files at once.
+5. **No copy-paste learning.** Still fine to ask him to predict code before revealing it. Verify understanding through code review (point 6) and the interview Q&A recaps (point 3), not by quizzing him directly.
 6. **Code review discipline.** When he shares code: review every line, explain issues (why, not just what), let him fix it rather than handing over the fix, praise good decisions.
 7. **Real-world framing.** Where relevant: how this is done at real Canadian companies, what interviewers ask about it, common junior mistakes, best practice vs. shortcut.
 8. **Context discipline (token efficiency):** read only the file/function needed, not whole files speculatively; don't re-discover architecture already covered in this file; keep responses concise and direct.
+9. **Decide, don't defer.** For standard technical calls (config, package structure, naming, which approach is idiomatic) — make the senior-dev decision yourself and explain the reasoning, don't ask Sagar to choose. He's new to this stack and can't meaningfully weigh options he doesn't have context for yet (2026-07-31 feedback: "you should be thinking about this as a senior and not me as a noob"). Only ask when it's a genuine product/scope/timeline tradeoff he's positioned to judge — not a technical one.
 
 ### Android → Spring Boot concept map
 
@@ -97,4 +100,4 @@ This is a learning project. Sagar is a senior Android developer new to Spring Bo
 
 ## Git
 
-Local project isn't initialized yet — GitHub repo exists but is empty. Never run `git commit` unless explicitly asked. Once set up: commit in logical units (one meaningful chunk of work per commit), short imperative subject lines, stage new files as they're created.
+Repo: `https://github.com/sagarjogadia28/iron-trail-api.git` (origin, branch `main`). Never run `git commit` unless explicitly asked. Commit in logical units (one meaningful chunk of work per commit), short imperative subject lines. **No `Co-Authored-By: Claude` trailer or any AI-attribution in commit messages** — Sagar's explicit preference (2026-07-31).
