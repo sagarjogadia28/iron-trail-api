@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: irontrail-postgres
+    environment:
+      POSTGRES_DB: irontrail
+      POSTGRES_USER: irontrail
+      POSTGRES_PASSWORD: irontrail_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - irontrail_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  irontrail_postgres_data:
