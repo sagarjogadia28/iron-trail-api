@@ -1,5 +1,7 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.repository
 
+import com.irontrail.api.exercise.model.Exercise
+import com.irontrail.api.exercise.model.MuscleGroup
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ExerciseRepository : JpaRepository<Exercise, Long> {

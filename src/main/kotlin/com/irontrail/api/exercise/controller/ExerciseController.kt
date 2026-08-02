@@ -1,5 +1,9 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.controller
 
+import com.irontrail.api.exercise.dto.ExerciseRequest
+import com.irontrail.api.exercise.dto.ExerciseResponse
+import com.irontrail.api.exercise.model.MuscleGroup
+import com.irontrail.api.exercise.service.ExerciseService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

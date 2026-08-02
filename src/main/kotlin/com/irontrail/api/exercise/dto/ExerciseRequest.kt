@@ -1,5 +1,8 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.dto
 
+import com.irontrail.api.exercise.model.Equipment
+import com.irontrail.api.exercise.model.ExerciseInputType
+import com.irontrail.api.exercise.model.MuscleGroup
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.NotNull

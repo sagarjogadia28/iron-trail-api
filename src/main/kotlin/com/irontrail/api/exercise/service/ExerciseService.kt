@@ -1,5 +1,11 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.service
 
+import com.irontrail.api.exercise.dto.ExerciseRequest
+import com.irontrail.api.exercise.dto.ExerciseResponse
+import com.irontrail.api.exercise.exception.ExerciseNotFoundException
+import com.irontrail.api.exercise.model.Exercise
+import com.irontrail.api.exercise.model.MuscleGroup
+import com.irontrail.api.exercise.repository.ExerciseRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 

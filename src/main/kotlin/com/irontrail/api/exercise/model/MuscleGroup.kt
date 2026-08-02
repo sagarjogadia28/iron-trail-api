@@ -1,4 +1,4 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.model
 
 enum class MuscleGroup {
     CHEST,

@@ -1,4 +1,4 @@
-package com.irontrail.api.exercise
+package com.irontrail.api.exercise.model
 
 import jakarta.persistence.CollectionTable
 import jakarta.persistence.Column
