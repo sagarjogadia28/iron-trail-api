@@ -31,6 +31,9 @@ data class UserProfile(
     @Column(name = "profile_image_path")
     val profileImagePath: String?,
 
+    @Column(name = "active_split_id")
+    val activeSplitId: Long? = null,
+
     @Column(name = "created_at")
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
