@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "user_profile")
@@ -35,5 +36,5 @@ data class UserProfile(
     val activeSplitId: Long? = null,
 
     @Column(name = "created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: OffsetDateTime = OffsetDateTime.now()
 )

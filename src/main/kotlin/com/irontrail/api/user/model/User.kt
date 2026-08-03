@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "users")
@@ -21,5 +22,5 @@ data class User(
     val email: String,
 
     @Column(name = "created_at")
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: OffsetDateTime = OffsetDateTime.now()
 )
