@@ -24,8 +24,6 @@ The Android app (`IronTrailApp`) currently stores everything locally in Room, si
 
 ## Project Resources
 
-Read these before making design decisions — don't rely on memory.
-
 | What | Path |
 |---|---|
 | Android domain models (business objects) | `D:\IronTrail\IronTrailApp\app\src\main\java\com\irontrail\app\core\domain\model\` |
@@ -37,7 +35,40 @@ Read these before making design decisions — don't rely on memory.
 | Project spec (V1/V2/V3 roadmap) | `D:\IronTrail\IronTrail-Project-Spec.md` |
 | Exercise library source | Wger API (external) |
 
+**Do not re-read the Android domain model/entity/DAO directories** — the full inventory is captured below in "Android Domain Model Snapshot" (2026-08-02) and is the source of truth for backend schema design. That part of `IronTrailApp` is frozen until this project (IronTrailAPI) is done, so the snapshot won't go stale. Only re-read Android source directly if you need to verify one specific field/detail the snapshot doesn't cover, or if Sagar says the Android side changed. The mockups and spec docs are lighter-weight and fine to read on demand — no snapshot needed for those.
+
 **Caveat on the two spec docs:** they describe the Android app's *current* single-user, offline-only, no-auth architecture — that part is superseded here. Use them for **domain/feature understanding** (what a Split, WorkoutDay, Template, Session, Set, PR actually mean and how they relate), not for backend architectural decisions. This API is deliberately the opposite: multi-user, Postgres-authoritative, real auth.
+
+## Android Domain Model Snapshot (captured 2026-08-02)
+
+Facts only — pulled from a full read of the three directories above. Room is currently single-user/single-tenant: **no `userId`/`ownerId`/`profileId` exists on any entity except `ProfileEntity` itself**, which is a hardcoded singleton row (`profileId = 1`, not autoincrement). No composite keys or UUIDs anywhere — every other PK is `Long` autoincrement. No many-to-many cross-ref tables — every parent-child link is a direct FK on the child.
+
+**Enums** (all stored via `Converters.kt` as `.name` strings, except `MuscleGroup` — see below):
+`Gender`(MALE, FEMALE, PREFER_NOT_TO_SAY) · `WeightUnit`(KG, LBS) · `MeasurementUnit`(METRIC, IMPERIAL) · `MuscleGroup`(CHEST, BACK, SHOULDERS, BICEPS, TRICEPS, FOREARMS, CORE, GLUTES, QUADS, HAMSTRINGS, CALVES) · `Equipment`(BARBELL, DUMBBELL, CABLE, MACHINE, BODYWEIGHT, KETTLEBELL, BAND, BENCH, OTHER) · `ExerciseInputType`(REPS, TIMED) · `SetType`(NORMAL, WARMUP, DROP_SET, FAILURE) · `SessionStatus`(ACTIVE, PAUSED, COMPLETED) · `PrType`(MAX_WEIGHT, MAX_REPS_AT_WEIGHT, MAX_VOLUME, ESTIMATED_1RM, MAX_DURATION)
+
+**Profile** (`ProfileEntity`, table `profile`): `profileId: Int = 1` (fixed singleton, not autoincrement), `name`, `gender`, `weightUnit`, `measurementUnit`, `profileImagePath: String?`, `activeSplitId: Long?` (FK → Split, `SET_NULL`), `createdAt: Long`. Closest thing to "ownership" in the current app, but it's a settings row, not an identity.
+
+**Exercise** (`ExerciseEntity`, table `exercise`): `exerciseId: Long` (PK), `wgerId: Int?` (unique index — wger-seeded), `name`, `muscleGroups: List<MuscleGroup>` (comma-joined string via converter — **already superseded in this repo**, backend has a real `exercise_muscle_groups` collection table since Module 3), `equipment`, `inputType`, `description: String?`, `imageUrl: String?`, `isCustom: Boolean`. No owner FK — exercises are global/shared.
+
+**Split** (`SplitEntity`, table `split`): only `splitId` (PK) + `name` persisted. Domain model's `workoutDayCount`/`totalExerciseCount`/`isActive` are all computed via joins (`SplitDao.getSplits()` → `SplitWithStats` projection), not columns.
+
+**WorkoutDay** (`WorkoutDayEntity`, table `workout_day`): `workoutDayId` (PK), `splitId` (FK → Split, `CASCADE`), `name`, `sortOrder`. `exerciseCount` is computed via join, not stored.
+
+**TemplateExercise** (`TemplateExerciseEntity`, table `template_exercise`): `templateExerciseId` (PK), `workoutDayId` (FK → WorkoutDay, `CASCADE`), `exerciseId` (FK → Exercise, `CASCADE`), `sortOrder`, `restDurationSeconds: Int = 90` (from `WorkoutDefaults.kt`), `isRepRange: Boolean = true`, `notes: String?`. Does NOT snapshot `exerciseName`/`inputType` — joins live to `exercise` (unlike session-side, see below).
+
+**TemplateSet** (`TemplateSetEntity`, table `template_set`): `templateSetId` (PK), `templateExerciseId` (FK, `CASCADE`), `sortOrder`, `targetReps: Int?`, `targetRepsMax: Int?` (rep-range), `targetDurationSeconds: Int?` (TIMED exercises), `setType: SetType = NORMAL`.
+
+**WorkoutSession** (`WorkoutSessionEntity`, table `workout_session`): `sessionId` (PK), `workoutDayId: Long?` (FK → WorkoutDay, `SET_NULL` — session survives day deletion), `splitNameSnapshot`/`workoutDayNameSnapshot: String?` (denormalized), `startedAt: Long`, `endedAt: Long?`, `durationSeconds: Long`, `totalVolumeKg: Float?`, `completedSets/totalSets: Int?`, `hasPrs: Boolean`, `notes: String?`, `status: SessionStatus`. `getActiveSession()` DAO query assumes only one ACTIVE/PAUSED session system-wide — that assumption breaks in multi-user and needs to become per-user.
+
+**SessionExercise** (`SessionExerciseEntity`, table `session_exercise`): `sessionExerciseId` (PK), `sessionId` (FK → WorkoutSession, `CASCADE`), `exerciseId: Long?` (FK → Exercise, `SET_NULL` — nullable so session history survives exercise deletion), `exerciseNameSnapshot`, `inputTypeSnapshot` (both denormalized, unlike TemplateExercise), `isRepRange`, `restDurationSeconds`, `sortOrder`, `notes: String?`.
+
+**SessionSet** (`SessionSetEntity`, table `session_set`): `sessionSetId` (PK), `sessionExerciseId` (FK, `CASCADE`), `sortOrder`, `setType`, `targetReps/targetRepsMax/targetDurationSeconds: Int?` (planned, copied from template), `reps/weightKg/durationSeconds` (actual logged values, all nullable), `isCompleted: Boolean`. `SessionSetDao.getPreviousPerformance(exerciseId, workoutDayId)` finds the last completed session for the same day+exercise to pre-fill "last time" values — currently a single global-history query, will need user scoping.
+
+**PR (personal record)** — two entities exist but are **currently unused**: registered in `IronTrailDatabase.kt` (schema exists) but no domain model and no DAO reads/writes them.
+- `PrRecordEntity` (table `pr_record`, "current best"): `prRecordId` (PK), `exerciseId` (FK → Exercise, `CASCADE`), `sessionId: Long?` (FK → WorkoutSession, `SET_NULL`), `prType`, `weightContextKg: Float`, `value: Float`, `achievedAt: Long`. Composite unique index on `(exerciseId, prType, weightContextKg)`.
+- `SessionPrEntity` (table `session_pr`, append-only log): `sessionPrId` (PK), `sessionId` (FK → WorkoutSession, `CASCADE`), `exerciseId: Long?` (FK, `SET_NULL`), `exerciseNameSnapshot`, `prType`, `weightContextKg`, `previousValue`, `newValue: Float`, `achievedAt: Long`.
+
+**Denormalization pattern to preserve in the backend:** session-side entities snapshot names/types (`exerciseNameSnapshot`, `splitNameSnapshot`, etc.) and use nullable `SET_NULL` FKs back to mutable planning entities, so historical session data survives edits/deletes upstream. Template-side entities join live instead. Keep this distinction when designing the Postgres schema.
 
 ## Curriculum Roadmap
 
@@ -49,7 +80,7 @@ Locked in 2026-07-31. Modules 0-7 alone produce a fully working, tested, resume-
 | 1 | Spring Core & DI | Done | IoC container, `@Component`/`@Service`/`@Repository`/`@Configuration`, constructor injection vs Hilt, bean scopes, profiles (dev/prod) vs Android build variants |
 | 2 | REST Layer | Done | `@RestController`, mapping annotations, path/query params, `ResponseEntity`, global exception handling (`@ControllerAdvice`) |
 | 3 | Persistence Basics | Done | PostgreSQL via docker-compose, JPA `@Entity` vs Room `@Entity`, Spring Data JPA repos vs Room DAOs, schema migrations (Flyway) |
-| 4 | IronTrail Domain Modeling | Not started | Translate Android domain models (Split, WorkoutDay, Template, Session, Set, PR, Exercise, Profile) into normalized, multi-user JPA entities with ownership |
+| 4 | IronTrail Domain Modeling | In progress | Translate Android domain models (Split, WorkoutDay, Template, Session, Set, PR, Exercise, Profile) into normalized, multi-user JPA entities with ownership |
 | 5 | Auth & Multi-User | Not started | Spring Security, JWT, password hashing, register/login, per-user data isolation |
 | 6 | Service Layer & Business Logic | Not started | Service pattern, `@Transactional`, PR-detection logic, DTO↔entity mapping, validation |
 | 7 | Testing | Not started | JUnit5 + Mockito, `@DataJpaTest`/`@WebMvcTest`, Testcontainers |
@@ -64,6 +95,14 @@ Deferred (only if time allows after Module 10): OpenAPI/Swagger docs, pagination
 **Package layout update (2026-08-02):** Within each feature package, split further into layer sub-packages — `controller/`, `service/`, `repository/`, `dto/`, `model/` (entities + enums), `exception/`. Reason: flat feature packages meant every file started with the feature name (`ExerciseController`, `ExerciseService`, `ExerciseRepository`, ...), which made the project tree hard to scan at a glance. `exercise` was reorganized this way; **apply the same sub-package split to every feature going forward** (`health` can stay flat unless/until it grows past a couple of files).
 
 **Module 3 update (2026-08-02):** Persistence is fully wired up. `docker-compose.yaml` runs Postgres 16 (`irontrail-postgres`, db/user/password `irontrail`/`irontrail`/`irontrail_dev`, port 5432). `ApiApplication.kt`'s `DataSourceAutoConfiguration`/`HibernateJpaAutoConfiguration` exclusion is removed. `application.properties` has the datasource URL/credentials and `spring.jpa.hibernate.ddl-auto=validate` (Flyway owns schema, Hibernate only validates the mapping against it — never `update` in this project). `Exercise` is a real `@Entity` (`exercises` table, `muscleGroups` as an `@ElementCollection` into `exercise_muscle_groups`, watch the `@Enumerated(EnumType.STRING)` + explicit `@Column` name on collection elements — Hibernate's default snake_case pluralization of the property name won't match a migration's column name by default). `ExerciseRepository` extends `JpaRepository<Exercise, Long>` with a custom `findByMuscleGroupsContaining`. `ExerciseService` now uses the repository instead of the old in-memory `ConcurrentHashMap`/`AtomicLong`, is `@Transactional`, and no longer seeds data in code — seeding is `V1__create_exercises_table.sql` (schema) + `V2__seed_exercises.sql` (4 fixture rows, `INSERT ... SELECT` deriving `exercise_id` by `name` rather than hardcoding IDs) under `src/main/resources/db/migration/`, applied automatically by Flyway on boot. Full CRUD verified against the real Postgres container via Postman/curl, including a direct `psql` check that writes persist. `build.gradle.kts` has `flyway-core` + `flyway-database-postgresql` + `spring-boot-flyway`.
+
+**Module 4 update (2026-08-03, in progress):** Ownership design decided — direct `owner_id`/`user_id` FK on tables that are independently meaningful and only ever filtered by id (`users`, `exercises`, `user_profile`, and the still-to-come `splits`, `workout_sessions`, `pr_records`); no owner column on tables that only exist through an owned parent, ownership enforced via joining through the parent instead (`workout_days`, `template_exercises`, `template_sets`, `session_exercises`, and the still-to-come `session_sets`, `session_prs`) — `pr_records` is the one exception that needs a *direct* `user_id` despite being a child table, because its `session_id` FK is nullable and there'd otherwise be no path back to a user. Module 4 scope is migration + entity + a bare `JpaRepository<X, Long>` per table only — no DTOs/services/controllers for the new entities, those are Module 6.
+
+Done so far: `V3` (`users`), `V4` (`exercises.owner_id`, drops `is_custom`), `V5` (`user_profile` — 1:1 with `users` via a shared `user_id` PK/FK, `ON DELETE CASCADE`, no separate surrogate id). Entities: `User.kt`, `Exercise.kt` (updated: `isCustom` → `ownerId: Long?`), `UserProfile.kt` (note: `@Id` with **no** `@GeneratedValue` and no default value on the constructor param — `user_id` isn't sequence-generated, it must be supplied by the caller from an existing `User`, and the missing default forces every call site to actually do that). New enums in `user/model`: `Gender`, `WeightUnit`, `MeasurementUnit` (no `displayName` — that's an Android UI-only concern, dropped same as it was for `Equipment`/`MuscleGroup`). `ExerciseResponse`/`ExerciseService` updated to match `Exercise.kt` (`create()` currently hardcodes `ownerId = null` since there's no authenticated caller yet to attribute it to — Module 5 will change just that one line). Repositories: `UserRepository`, `UserProfileRepository` (both bare, no custom methods yet — `UserRepository` will need `findByEmail` when Module 5 builds login).
+
+Remaining migration plan, in order: `V6` `splits` (owner_id) → `V7` `workout_days` (transitive via `split_id`) → `V8` `template_exercises` (transitive) → `V9` `template_sets` (transitive) → `V10` alter `user_profile` to add `active_split_id` FK (deferred until `splits` exists) → `V11` `workout_sessions` (user_id) → `V12` `session_exercises` (transitive) → `V13` `session_sets` (transitive) → `V14` `pr_records` (direct user_id — see ownership note above) → `V15` `session_prs` (transitive). `template_exercises`/`template_sets` and the session-side entities are the first real use of `@OneToMany`/`@ManyToOne` (true parent-child aggregates, always co-fetched, children meaningless alone) — everything through `V5` deliberately used plain FK columns instead, since nothing navigated them as objects.
+
+**Next up: `V6` (`splits`).**
 
 Module 2 added a full CRUD REST layer at `/api/v1/exercises` (`com.irontrail.api.exercise`) — `Exercise`/`ExerciseRequest`/`ExerciseResponse`, `MuscleGroup`/`Equipment`/`ExerciseInputType` enums, `ExerciseService` (in-memory `ConcurrentHashMap` store, pre-seeded, `AtomicLong` id generation), `ExerciseController` (GET list+filter, GET by id, POST, PUT, DELETE), and `GlobalExceptionHandler` in `com.irontrail.api.common` (`@RestControllerAdvice` handling `ExerciseNotFoundException` → 404 and `MethodArgumentNotValidException` → 400). This is intentionally not throwaway — same field shape as Android's `Exercise.kt`, so Module 3 swaps the in-memory store for a JPA repository and Module 4 turns `Exercise` into the real entity, without changing the DTOs or controller contract.
 
