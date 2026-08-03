@@ -46,6 +46,6 @@ data class Exercise(
     @Column(name = "image_url")
     val imageUrl: String?,
 
-    @Column(name = "is_custom")
-    val isCustom: Boolean
+    @Column(name = "owner_id")
+    val ownerId: Long?
 )

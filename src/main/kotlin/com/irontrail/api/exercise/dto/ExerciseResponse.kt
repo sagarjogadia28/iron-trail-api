@@ -13,5 +13,5 @@ data class ExerciseResponse(
     val inputType: ExerciseInputType,
     val description: String?,
     val imageUrl: String?,
-    val isCustom: Boolean
+    val ownerId: Long?
 )

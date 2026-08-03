@@ -32,7 +32,7 @@ class ExerciseService(
             inputType = request.inputType,
             description = request.description,
             imageUrl = null,
-            isCustom = true
+            ownerId = null
         )
         return exerciseRepository.save(exercise).toResponse()
     }
@@ -63,6 +63,6 @@ class ExerciseService(
         inputType = inputType,
         description = description,
         imageUrl = imageUrl,
-        isCustom = isCustom
+        ownerId = ownerId
     )
 }
