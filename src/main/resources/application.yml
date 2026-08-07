@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: api
+  datasource:
+    url: jdbc:postgresql://localhost:5432/irontrail
+    username: ${DB_USERNAME:irontrail}
+    password: ${DB_PASSWORD:irontrail_dev}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+server:
+  servlet:
+    context-path: /api
