@@ -14,29 +14,40 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "template_sets")
-data class TemplateSet(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "template_set_id")
-    val templateSetId: Long = 0,
-
+class TemplateSet(
     @Column(name = "sort_order")
-    val sortOrder: Int,
+    var sortOrder: Int,
 
     @Column(name = "target_reps")
-    val targetReps: Int? = null,
+    var targetReps: Int? = null,
 
     @Column(name = "target_reps_max")
-    val targetRepsMax: Int? = null,
+    var targetRepsMax: Int? = null,
 
     @Column(name = "target_duration_seconds")
-    val targetDurationSeconds: Int? = null,
+    var targetDurationSeconds: Int? = null,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "set_type")
-    val setType: SetType
+    var setType: SetType
 ) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "template_set_id")
+    var templateSetId: Long = 0
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_exercise_id")
     lateinit var templateExercise: TemplateExercise
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TemplateSet) return false
+        return templateSetId != 0L && templateSetId == other.templateSetId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String =
+        "TemplateSet(templateSetId=$templateSetId, sortOrder=$sortOrder, setType=$setType)"
 }

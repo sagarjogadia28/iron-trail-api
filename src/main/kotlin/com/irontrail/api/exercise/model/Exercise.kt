@@ -14,16 +14,11 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "exercises")
-data class Exercise(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "exercise_id")
-    val exerciseId: Long = 0,
-
+class Exercise(
     @Column(name = "wger_id")
-    val wgerId: Int?,
+    var wgerId: Int?,
 
-    val name: String,
+    var name: String,
 
     @ElementCollection
     @CollectionTable(
@@ -32,20 +27,35 @@ data class Exercise(
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "muscle_group")
-    val muscleGroups: List<MuscleGroup>,
+    var muscleGroups: List<MuscleGroup>,
 
     @Enumerated(EnumType.STRING)
-    val equipment: Equipment,
+    var equipment: Equipment,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "input_type")
-    val inputType: ExerciseInputType,
+    var inputType: ExerciseInputType,
 
-    val description: String?,
+    var description: String?,
 
     @Column(name = "image_url")
-    val imageUrl: String?,
+    var imageUrl: String?,
 
     @Column(name = "owner_id")
-    val ownerId: Long?
-)
+    var ownerId: Long?
+) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "exercise_id")
+    var exerciseId: Long = 0
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Exercise) return false
+        return exerciseId != 0L && exerciseId == other.exerciseId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String = "Exercise(exerciseId=$exerciseId, name=$name)"
+}

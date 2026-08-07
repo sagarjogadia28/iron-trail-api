@@ -6,21 +6,31 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.time.LocalDateTime
+import org.hibernate.annotations.CreationTimestamp
 import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "users")
-data class User(
-
+class User(
+    @Column(unique = true)
+    var email: String
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    val userId: Long = 0,
+    var userId: Long = 0
 
-    @Column(unique = true)
-    val email: String,
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    var createdAt: OffsetDateTime = OffsetDateTime.now()
 
-    @Column(name = "created_at")
-    val createdAt: OffsetDateTime = OffsetDateTime.now()
-)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is User) return false
+        return userId != 0L && userId == other.userId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String = "User(userId=$userId, email=$email)"
+}

@@ -39,14 +39,12 @@ class ExerciseService(
 
     fun update(id: Long, request: ExerciseRequest): ExerciseResponse {
         val existing = exerciseRepository.findById(id).orElseThrow { ExerciseNotFoundException(id) }
-        val updated = existing.copy(
-            name = request.name,
-            muscleGroups = request.muscleGroups,
-            equipment = request.equipment,
-            inputType = request.inputType,
-            description = request.description
-        )
-        return exerciseRepository.save(updated).toResponse()
+        existing.name = request.name
+        existing.muscleGroups = request.muscleGroups
+        existing.equipment = request.equipment
+        existing.inputType = request.inputType
+        existing.description = request.description
+        return existing.toResponse()
     }
 
     fun delete(id: Long) {

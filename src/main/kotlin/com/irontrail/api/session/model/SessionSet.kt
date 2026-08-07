@@ -15,40 +15,51 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "session_sets")
-data class SessionSet(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "session_set_id")
-    val sessionSetId: Long = 0,
-
+class SessionSet(
     @Column(name = "sort_order")
-    val sortOrder: Int,
+    var sortOrder: Int,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "set_type")
-    val setType: SetType,
+    var setType: SetType,
 
     @Column(name = "target_reps")
-    val targetReps: Int? = null,
+    var targetReps: Int? = null,
 
     @Column(name = "target_reps_max")
-    val targetRepsMax: Int? = null,
+    var targetRepsMax: Int? = null,
 
     @Column(name = "target_duration_seconds")
-    val targetDurationSeconds: Int? = null,
+    var targetDurationSeconds: Int? = null,
 
-    val reps: Int? = null,
+    var reps: Int? = null,
 
     @Column(name = "weight_kg")
-    val weightKg: Double? = null,
+    var weightKg: Double? = null,
 
     @Column(name = "duration_seconds")
-    val durationSeconds: Int? = null,
+    var durationSeconds: Int? = null,
 
     @Column(name = "is_completed")
-    val isCompleted: Boolean
+    var isCompleted: Boolean
 ) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "session_set_id")
+    var sessionSetId: Long = 0
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_exercise_id")
     lateinit var sessionExercise: SessionExercise
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SessionSet) return false
+        return sessionSetId != 0L && sessionSetId == other.sessionSetId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String =
+        "SessionSet(sessionSetId=$sessionSetId, sortOrder=$sortOrder, setType=$setType)"
 }

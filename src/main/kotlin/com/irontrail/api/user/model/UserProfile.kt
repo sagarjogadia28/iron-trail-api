@@ -6,35 +6,46 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import java.time.LocalDateTime
+import org.hibernate.annotations.CreationTimestamp
 import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "user_profile")
-data class UserProfile(
-    @Id
-    @Column(name = "user_id")
-    val userId: Long,
-
-    val name: String,
+class UserProfile(
+    var name: String,
 
     @Enumerated(EnumType.STRING)
-    val gender: Gender,
+    var gender: Gender,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "weight_unit")
-    val weightUnit: WeightUnit,
+    var weightUnit: WeightUnit,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "measurement_unit")
-    val measurementUnit: MeasurementUnit,
+    var measurementUnit: MeasurementUnit,
 
     @Column(name = "profile_image_path")
-    val profileImagePath: String?,
+    var profileImagePath: String?,
 
     @Column(name = "active_split_id")
-    val activeSplitId: Long? = null,
+    var activeSplitId: Long? = null
+) {
+    @Id
+    @Column(name = "user_id")
+    var userId: Long = 0
 
-    @Column(name = "created_at")
-    val createdAt: OffsetDateTime = OffsetDateTime.now()
-)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    var createdAt: OffsetDateTime = OffsetDateTime.now()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is UserProfile) return false
+        return userId != 0L && userId == other.userId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String = "UserProfile(userId=$userId, name=$name)"
+}

@@ -9,17 +9,28 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "workout_days")
-data class WorkoutDay(
+class WorkoutDay(
+    @Column(name = "split_id")
+    var splitId: Long,
+
+    var name: String,
+
+    @Column(name = "sort_order")
+    var sortOrder: Int
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "workout_day_id")
-    val workoutDayId: Long = 0,
+    var workoutDayId: Long = 0
 
-    @Column(name = "split_id")
-    val splitId: Long,
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is WorkoutDay) return false
+        return workoutDayId != 0L && workoutDayId == other.workoutDayId
+    }
 
-    val name: String,
+    override fun hashCode(): Int = javaClass.hashCode()
 
-    @Column(name = "sort_order")
-    val sortOrder: Int
-)
+    override fun toString(): String =
+        "WorkoutDay(workoutDayId=$workoutDayId, splitId=$splitId, name=$name, sortOrder=$sortOrder)"
+}

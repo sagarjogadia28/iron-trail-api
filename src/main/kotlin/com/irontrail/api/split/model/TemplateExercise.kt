@@ -11,30 +11,40 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "template_exercises")
-data class TemplateExercise(
+class TemplateExercise(
+    @Column(name = "workout_day_id")
+    var workoutDayId: Long,
 
+    @Column(name = "exercise_id")
+    var exerciseId: Long,
+
+    @Column(name = "sort_order")
+    var sortOrder: Int,
+
+    @Column(name = "rest_duration_seconds")
+    var restDurationSeconds: Int = 90,
+
+    @Column(name = "is_rep_range")
+    var isRepRange: Boolean = true,
+
+    var notes: String? = null
+) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "template_exercise_id")
-    val templateExerciseId: Long = 0,
+    var templateExerciseId: Long = 0
 
-    @Column(name = "workout_day_id")
-    val workoutDayId: Long,
-
-    @Column(name = "exercise_id")
-    val exerciseId: Long,
-
-    @Column(name = "sort_order")
-    val sortOrder: Int,
-
-    @Column(name = "rest_duration_seconds")
-    val restDurationSeconds: Int = 90,
-
-    @Column(name = "is_rep_range")
-    val isRepRange: Boolean = true,
-
-    val notes: String? = null
-) {
     @OneToMany(mappedBy = "templateExercise", fetch = FetchType.LAZY)
     val sets: MutableList<TemplateSet> = mutableListOf()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is TemplateExercise) return false
+        return templateExerciseId != 0L && templateExerciseId == other.templateExerciseId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String =
+        "TemplateExercise(templateExerciseId=$templateExerciseId, workoutDayId=$workoutDayId, exerciseId=$exerciseId)"
 }

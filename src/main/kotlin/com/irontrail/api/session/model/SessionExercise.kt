@@ -16,37 +16,48 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "session_exercises")
-data class SessionExercise(
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "session_exercise_id")
-    val sessionExerciseId: Long = 0,
-
+class SessionExercise(
     @Column(name = "exercise_id")
-    val exerciseId: Long? = null,
+    var exerciseId: Long? = null,
 
     @Column(name = "exercise_name_snapshot")
-    val exerciseNameSnapshot: String,
+    var exerciseNameSnapshot: String,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "input_type_snapshot")
-    val inputTypeSnapshot: ExerciseInputType,
+    var inputTypeSnapshot: ExerciseInputType,
 
     @Column(name = "is_rep_range")
-    val isRepRange: Boolean,
+    var isRepRange: Boolean,
 
     @Column(name = "rest_duration_seconds")
-    val restDurationSeconds: Int,
+    var restDurationSeconds: Int,
 
     @Column(name = "sort_order")
-    val sortOrder: Int,
+    var sortOrder: Int,
 
-    val notes: String? = null
+    var notes: String? = null
 ) {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "session_exercise_id")
+    var sessionExerciseId: Long = 0
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id")
     lateinit var workoutSession: WorkoutSession
 
     @OneToMany(mappedBy = "sessionExercise", fetch = FetchType.LAZY)
     val sets: MutableList<SessionSet> = mutableListOf()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is SessionExercise) return false
+        return sessionExerciseId != 0L && sessionExerciseId == other.sessionExerciseId
+    }
+
+    override fun hashCode(): Int = javaClass.hashCode()
+
+    override fun toString(): String =
+        "SessionExercise(sessionExerciseId=$sessionExerciseId, exerciseNameSnapshot=$exerciseNameSnapshot)"
 }
