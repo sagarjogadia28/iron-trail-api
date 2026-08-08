@@ -1,8 +1,10 @@
 package com.irontrail.api.common
 
+import com.irontrail.api.auth.exception.EmailAlreadyInUseException
 import com.irontrail.api.exercise.exception.ExerciseNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -34,4 +36,14 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ValidationErrorResponse(status = HttpStatus.BAD_REQUEST.value(), errors = errors))
     }
+
+    @ExceptionHandler(EmailAlreadyInUseException::class)
+    fun handleEmailInUse(ex: EmailAlreadyInUseException) : ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ErrorResponse(status = HttpStatus.CONFLICT.value(), message = ex.message ?: "Email already in use"))
+
+    @ExceptionHandler(BadCredentialsException::class)
+    fun handleBadCredentials(ex: BadCredentialsException) : ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(ErrorResponse(status = HttpStatus.UNAUTHORIZED.value(), message = "Invalid email or password"))
 }
