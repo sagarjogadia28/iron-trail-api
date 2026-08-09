@@ -7,6 +7,7 @@ import com.irontrail.api.exercise.service.ExerciseService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -24,25 +25,34 @@ class ExerciseController(
 ) {
 
     @GetMapping
-    fun findAll(@RequestParam(required = false) muscleGroup: MuscleGroup?): List<ExerciseResponse> =
-        exerciseService.findAll(muscleGroup)
+    fun findAll(
+        @RequestParam(required = false) muscleGroup: MuscleGroup?,
+        @AuthenticationPrincipal userId: Long
+    ): List<ExerciseResponse> = exerciseService.findAll(muscleGroup, userId)
 
     @GetMapping("/{id}")
-    fun findById(@PathVariable id: Long): ExerciseResponse = exerciseService.findById(id)
+    fun findById(@PathVariable id: Long, @AuthenticationPrincipal userId: Long): ExerciseResponse =
+        exerciseService.findById(id, userId)
 
     @PostMapping
-    fun create(@Valid @RequestBody request: ExerciseRequest): ResponseEntity<ExerciseResponse> {
-        val created = exerciseService.create(request)
+    fun create(
+        @Valid @RequestBody request: ExerciseRequest,
+        @AuthenticationPrincipal userId: Long
+    ): ResponseEntity<ExerciseResponse> {
+        val created = exerciseService.create(request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
     }
 
     @PutMapping("/{id}")
-    fun update(@PathVariable id: Long, @Valid @RequestBody request: ExerciseRequest): ExerciseResponse =
-        exerciseService.update(id, request)
+    fun update(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: ExerciseRequest,
+        @AuthenticationPrincipal userId: Long
+    ): ExerciseResponse = exerciseService.update(id, request, userId)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Long): ResponseEntity<Void> {
-        exerciseService.delete(id)
+    fun delete(@PathVariable id: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+        exerciseService.delete(id, userId)
         return ResponseEntity.noContent().build()
     }
 }

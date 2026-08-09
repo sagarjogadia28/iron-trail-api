@@ -15,15 +15,16 @@ class ExerciseService(
     private val exerciseRepository: ExerciseRepository
 ) {
 
-    fun findAll(muscleGroup: MuscleGroup?): List<ExerciseResponse> =
-        (if (muscleGroup != null) exerciseRepository.findByMuscleGroupsContaining(muscleGroup)
-        else exerciseRepository.findAll())
+    fun findAll(muscleGroup: MuscleGroup?, userId: Long): List<ExerciseResponse> =
+        (if (muscleGroup != null) exerciseRepository.findVisibleByMuscleGroup(muscleGroup, userId)
+        else exerciseRepository.findByOwnerIdIsNullOrOwnerId(userId))
             .map { it.toResponse() }
 
-    fun findById(id: Long): ExerciseResponse =
-        exerciseRepository.findById(id).orElseThrow { ExerciseNotFoundException(id) }.toResponse()
+    fun findById(id: Long, userId: Long): ExerciseResponse =
+        exerciseRepository.findVisibleById(id, userId)?.toResponse()
+            ?: throw ExerciseNotFoundException(id)
 
-    fun create(request: ExerciseRequest): ExerciseResponse {
+    fun create(request: ExerciseRequest, userId: Long): ExerciseResponse {
         val exercise = Exercise(
             wgerId = null,
             name = request.name,
@@ -32,13 +33,13 @@ class ExerciseService(
             inputType = request.inputType,
             description = request.description,
             imageUrl = null,
-            ownerId = null
+            ownerId = userId
         )
         return exerciseRepository.save(exercise).toResponse()
     }
 
-    fun update(id: Long, request: ExerciseRequest): ExerciseResponse {
-        val existing = exerciseRepository.findById(id).orElseThrow { ExerciseNotFoundException(id) }
+    fun update(id: Long, request: ExerciseRequest, userId: Long): ExerciseResponse {
+        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw ExerciseNotFoundException(id)
         existing.name = request.name
         existing.muscleGroups = request.muscleGroups
         existing.equipment = request.equipment
@@ -47,9 +48,9 @@ class ExerciseService(
         return existing.toResponse()
     }
 
-    fun delete(id: Long) {
-        if (exerciseRepository.existsById(id)) exerciseRepository.deleteById(id)
-        else throw ExerciseNotFoundException(id)
+    fun delete(id: Long, userId: Long) {
+        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw ExerciseNotFoundException(id)
+        exerciseRepository.delete(existing)
     }
 
     private fun Exercise.toResponse() = ExerciseResponse(
