@@ -22,12 +22,13 @@ class AuthService(
 ) {
 
     fun register(request: RegisterRequest) : AuthResponse {
-        if (userRepository.findByEmail(request.email) != null) {
-            throw EmailAlreadyInUseException(request.email)
+        val email = request.email.trim().lowercase()
+        if (userRepository.findByEmail(email) != null) {
+            throw EmailAlreadyInUseException(email)
         }
 
         val user = User(
-            email = request.email,
+            email = email,
             passwordHash = passwordEncoder.encode(request.password)!!
         )
         userRepository.save(user)
@@ -35,12 +36,13 @@ class AuthService(
     }
 
     fun login(request: LoginRequest) : AuthResponse {
+        val email = request.email.trim().lowercase()
         authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(request.email, request.password)
+            UsernamePasswordAuthenticationToken(email, request.password)
         )
 
-        val user = userRepository.findByEmail(request.email)
-            ?: throw IllegalStateException("Authenticated user not found: ${request.email}")
+        val user = userRepository.findByEmail(email)
+            ?: throw IllegalStateException("Authenticated user not found: $email")
 
         return AuthResponse(jwtService.generateToken(user.userId))
     }

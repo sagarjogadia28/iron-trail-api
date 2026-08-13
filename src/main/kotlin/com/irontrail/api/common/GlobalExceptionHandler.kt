@@ -45,4 +45,9 @@ class GlobalExceptionHandler {
     fun handleBadCredentials(ex: BadCredentialsException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ErrorResponse(status = HttpStatus.UNAUTHORIZED.value(), message = "Invalid email or password"))
+
+    @ExceptionHandler(IllegalStateException::class)
+    fun handleIllegalState(ex: IllegalStateException) : ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse(status = HttpStatus.INTERNAL_SERVER_ERROR.value(), message = "Internal server error"))
 }
