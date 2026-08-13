@@ -1,8 +1,6 @@
 package com.irontrail.api.common
 
 import com.irontrail.api.auth.exception.EmailAlreadyInUseException
-import com.irontrail.api.exercise.exception.ExerciseNotFoundException
-import com.irontrail.api.split.exception.SplitNotFoundException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.authentication.BadCredentialsException
@@ -26,8 +24,8 @@ data class ValidationErrorResponse(
 @RestControllerAdvice
 class GlobalExceptionHandler {
 
-    @ExceptionHandler(ExerciseNotFoundException::class)
-    fun handleNotFound(ex: ExerciseNotFoundException): ResponseEntity<ErrorResponse> =
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(ex: NotFoundException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.NOT_FOUND)
             .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), message = ex.message ?: "Not found"))
 
@@ -39,17 +37,12 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(EmailAlreadyInUseException::class)
-    fun handleEmailInUse(ex: EmailAlreadyInUseException) : ResponseEntity<ErrorResponse> =
+    fun handleEmailInUse(ex: EmailAlreadyInUseException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.CONFLICT)
             .body(ErrorResponse(status = HttpStatus.CONFLICT.value(), message = ex.message ?: "Email already in use"))
 
     @ExceptionHandler(BadCredentialsException::class)
-    fun handleBadCredentials(ex: BadCredentialsException) : ResponseEntity<ErrorResponse> =
+    fun handleBadCredentials(ex: BadCredentialsException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(ErrorResponse(status = HttpStatus.UNAUTHORIZED.value(), message = "Invalid email or password"))
-
-    @ExceptionHandler(SplitNotFoundException::class)
-    fun handleSplitNotFound(ex: SplitNotFoundException) : ResponseEntity<ErrorResponse> =
-        ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ErrorResponse(status = HttpStatus.NOT_FOUND.value(), message = ex.message ?: "Not found"))
 }

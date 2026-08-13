@@ -1,8 +1,8 @@
 package com.irontrail.api.exercise.service
 
+import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.dto.ExerciseRequest
 import com.irontrail.api.exercise.dto.ExerciseResponse
-import com.irontrail.api.exercise.exception.ExerciseNotFoundException
 import com.irontrail.api.exercise.model.Exercise
 import com.irontrail.api.exercise.model.MuscleGroup
 import com.irontrail.api.exercise.repository.ExerciseRepository
@@ -22,7 +22,7 @@ class ExerciseService(
 
     fun findById(id: Long, userId: Long): ExerciseResponse =
         exerciseRepository.findVisibleById(id, userId)?.toResponse()
-            ?: throw ExerciseNotFoundException(id)
+            ?: throw NotFoundException("Exercise", id)
 
     fun create(request: ExerciseRequest, userId: Long): ExerciseResponse {
         val exercise = Exercise(
@@ -39,7 +39,7 @@ class ExerciseService(
     }
 
     fun update(id: Long, request: ExerciseRequest, userId: Long): ExerciseResponse {
-        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw ExerciseNotFoundException(id)
+        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw NotFoundException("Exercise", id)
         existing.name = request.name
         existing.muscleGroups = request.muscleGroups
         existing.equipment = request.equipment
@@ -49,7 +49,7 @@ class ExerciseService(
     }
 
     fun delete(id: Long, userId: Long) {
-        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw ExerciseNotFoundException(id)
+        val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw NotFoundException("Exercise", id)
         exerciseRepository.delete(existing)
     }
 

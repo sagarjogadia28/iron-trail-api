@@ -3,6 +3,8 @@ package com.irontrail.api.split.controller
 import com.irontrail.api.split.dto.SplitDetailResponse
 import com.irontrail.api.split.dto.SplitRequest
 import com.irontrail.api.split.dto.SplitResponse
+import com.irontrail.api.split.dto.WorkoutDayRequest
+import com.irontrail.api.split.dto.WorkoutDayResponse
 import com.irontrail.api.split.service.SplitService
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
@@ -48,4 +50,13 @@ class SplitController(
         return ResponseEntity.noContent().build()
     }
 
+    @PostMapping("/{splitId}/workout-days")
+    fun createWorkoutDay(
+        @PathVariable splitId: Long,
+        @Valid @RequestBody request: WorkoutDayRequest,
+        @AuthenticationPrincipal userId: Long
+    ) : ResponseEntity<WorkoutDayResponse> {
+        val created = splitService.createWorkoutDay(splitId, request, userId)
+        return ResponseEntity.status(HttpStatus.CREATED).body(created)
+    }
 }
