@@ -97,8 +97,9 @@ class SplitService(
     //TemplateExercise
     fun createTemplateExercise(workoutDayId: Long, request: TemplateExerciseRequest, userId: Long): TemplateExerciseResponse {
         ownershipResolver.getOwnedWorkoutDay(workoutDayId, userId)
-        exerciseRepository.findVisibleById(request.exerciseId, userId)
-            ?: throw NotFoundException("Exercise", request.exerciseId)
+        if (!exerciseRepository.existsVisibleById(request.exerciseId, userId))
+            throw NotFoundException("Exercise", request.exerciseId)
+
         val saved = templateExerciseRepository.save(
             TemplateExercise(
                 workoutDayId = workoutDayId,
@@ -114,8 +115,9 @@ class SplitService(
 
     fun updateTemplateExercise(templateExerciseId: Long, request: TemplateExerciseRequest, userId: Long): TemplateExerciseResponse {
         val templateExercise = ownershipResolver.getOwnedTemplateExercise(templateExerciseId, userId)
-        exerciseRepository.findVisibleById(request.exerciseId, userId)
-            ?: throw NotFoundException("Exercise", request.exerciseId)
+        if (!exerciseRepository.existsVisibleById(request.exerciseId, userId))
+            throw NotFoundException("Exercise", request.exerciseId)
+
         templateExercise.exerciseId = request.exerciseId
         templateExercise.sortOrder = request.sortOrder
         templateExercise.restDurationSeconds = request.restDurationSeconds
@@ -164,38 +166,36 @@ class SplitService(
         val splitIds = splits.map { it.splitId }
 
         val workoutDays = workoutDayRepository.findBySplitIdIn(splitIds)
-        val templateExercises = templateExerciseRepository.findByWorkoutDayIdIn(workoutDays.map { it.workoutDayId })
-        val templateSets = templateSetRepository.findByTemplateExerciseIn(templateExercises)
-
+        val exercisesByDayId = buildTemplateExerciseTree(workoutDays.map { it.workoutDayId })
         val daysBySplitId = workoutDays.groupBy { it.splitId }
-        val exercisesByDayId = templateExercises.groupBy { it.workoutDayId }
-        val setsByExerciseId = templateSets.groupBy { it.templateExercise.templateExerciseId }
 
         return splitIds.associateWith { splitId ->
             daysBySplitId[splitId].orEmpty().sortedBy { it.sortOrder }.map { day ->
-                val exercises = exercisesByDayId[day.workoutDayId].orEmpty().sortedBy { it.sortOrder }.map { te ->
-                    val sets = setsByExerciseId[te.templateExerciseId].orEmpty().sortedBy { it.sortOrder }
-                        .map { it.toResponse() }
-                    te.toResponse(sets)
-                }
-                day.toResponse(exercises)
+                day.toResponse(exercisesByDayId.getValue(day.workoutDayId))
             }
         }
     }
 
-    private fun buildTemplateExerciseResponses(workoutDay: WorkoutDay): List<TemplateExerciseResponse> {
-        val templateExercises = templateExerciseRepository.findByWorkoutDayIdIn(listOf(workoutDay.workoutDayId))
-            .sortedBy { it.sortOrder }
+    private fun buildTemplateExerciseTree(workoutDayIds: List<Long>) : Map<Long, List<TemplateExerciseResponse>> {
+        if (workoutDayIds.isEmpty()) return emptyMap()
+        val templateExercises = templateExerciseRepository.findByWorkoutDayIdIn(workoutDayIds)
         val templateSets = templateSetRepository.findByTemplateExerciseIn(templateExercises)
         val setsByExerciseId = templateSets.groupBy { it.templateExercise.templateExerciseId }
-        return templateExercises.map { te ->
-            te.toResponse(setsByExerciseId[te.templateExerciseId].orEmpty().sortedBy { it.sortOrder }.map { it.toResponse() })
+        val exercisesByDayId = templateExercises.groupBy { it.workoutDayId }
+
+        return workoutDayIds.associateWith { dayId ->
+            exercisesByDayId[dayId].orEmpty().sortedBy { it.sortOrder }.map { te ->
+                val sets = setsByExerciseId[te.templateExerciseId].orEmpty().sortedBy { it.sortOrder }.map { it.toResponse() }
+                te.toResponse(sets)
+            }
         }
     }
 
+    private fun buildTemplateExerciseResponses(workoutDay: WorkoutDay): List<TemplateExerciseResponse> =
+       buildTemplateExerciseTree(listOf(workoutDay.workoutDayId)).getValue(workoutDay.workoutDayId)
+
     private fun buildTemplateSetResponses(templateExercise: TemplateExercise): List<TemplateSetResponse> =
-        templateSetRepository.findByTemplateExerciseIn(listOf(templateExercise)).sortedBy { it.sortOrder }
-            .map { it.toResponse() }
+        templateExercise.sets.sortedBy { it.sortOrder }.map { it.toResponse() }
 
     private fun WorkoutDay.toResponse(templateExercises: List<TemplateExerciseResponse>) = WorkoutDayResponse(
         workoutDayId = workoutDayId,

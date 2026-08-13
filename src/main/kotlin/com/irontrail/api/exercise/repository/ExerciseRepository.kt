@@ -22,4 +22,9 @@ interface ExerciseRepository : JpaRepository<Exercise, Long> {
     fun findVisibleById(
         @Param("id") id: Long, @Param("ownerId") ownerId: Long
     ): Exercise?
+
+    @Query("SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END FROM Exercise e WHERE e.exerciseId = :id AND (e.ownerId IS NULL OR e.ownerId = :ownerId)")
+    fun existsVisibleById(
+        @Param("id") id: Long, @Param("ownerId") ownerId: Long
+    ): Boolean
 }
