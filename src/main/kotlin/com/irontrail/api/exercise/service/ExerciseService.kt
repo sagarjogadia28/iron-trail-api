@@ -1,6 +1,7 @@
 package com.irontrail.api.exercise.service
 
 import com.irontrail.api.common.NotFoundException
+import com.irontrail.api.exercise.dto.ExercisePatchRequest
 import com.irontrail.api.exercise.dto.ExerciseRequest
 import com.irontrail.api.exercise.dto.ExerciseResponse
 import com.irontrail.api.exercise.model.Exercise
@@ -28,7 +29,8 @@ class ExerciseService(
         val exercise = Exercise(
             wgerId = null,
             name = request.name,
-            muscleGroups = request.muscleGroups,
+            primaryMuscleGroup = request.primaryMuscleGroup,
+            secondaryMuscleGroups = request.secondaryMuscleGroups,
             equipment = request.equipment,
             inputType = request.inputType,
             description = request.description,
@@ -38,13 +40,14 @@ class ExerciseService(
         return exerciseRepository.save(exercise).toResponse()
     }
 
-    fun update(id: Long, request: ExerciseRequest, userId: Long): ExerciseResponse {
+    fun update(id: Long, request: ExercisePatchRequest, userId: Long): ExerciseResponse {
         val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw NotFoundException("Exercise", id)
-        existing.name = request.name
-        existing.muscleGroups = request.muscleGroups
-        existing.equipment = request.equipment
-        existing.inputType = request.inputType
-        existing.description = request.description
+        request.name?.let { existing.name = it }
+        request.primaryMuscleGroup?.let { existing.primaryMuscleGroup = it }
+        request.secondaryMuscleGroups?.let { existing.secondaryMuscleGroups = it }
+        request.equipment?.let { existing.equipment = it }
+        request.inputType?.let { existing.inputType = it }
+        request.description?.let { existing.description = it }
         return existing.toResponse()
     }
 
@@ -57,7 +60,8 @@ class ExerciseService(
         exerciseId = exerciseId,
         wgerId = wgerId,
         name = name,
-        muscleGroups = muscleGroups,
+        primaryMuscleGroup = primaryMuscleGroup,
+        secondaryMuscleGroups = secondaryMuscleGroups,
         equipment = equipment,
         inputType = inputType,
         description = description,

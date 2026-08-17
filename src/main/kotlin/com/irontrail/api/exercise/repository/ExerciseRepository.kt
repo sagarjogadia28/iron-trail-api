@@ -12,7 +12,8 @@ interface ExerciseRepository : JpaRepository<Exercise, Long> {
     fun findByExerciseIdAndOwnerId(exerciseId: Long, ownerId: Long): Exercise?
 
     @Query(
-        "SELECT e FROM Exercise e WHERE :muscleGroup MEMBER OF e.muscleGroups " + "AND (e.ownerId IS NULL OR e.ownerId = :ownerId)"
+        "SELECT e FROM Exercise e WHERE (e.primaryMuscleGroup = :muscleGroup OR :muscleGroup MEMBER OF e.secondaryMuscleGroups) " +
+            "AND (e.ownerId IS NULL OR e.ownerId = :ownerId)"
     )
     fun findVisibleByMuscleGroup(
         @Param("muscleGroup") muscleGroup: MuscleGroup, @Param("ownerId") ownerId: Long

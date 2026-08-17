@@ -20,14 +20,18 @@ class Exercise(
 
     var name: String,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "primary_muscle_group")
+    var primaryMuscleGroup: MuscleGroup,
+
     @ElementCollection
     @CollectionTable(
-        name = "exercise_muscle_groups",
+        name = "exercise_secondary_muscle_groups",
         joinColumns = [JoinColumn(name = "exercise_id")]
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "muscle_group")
-    var muscleGroups: List<MuscleGroup>,
+    var secondaryMuscleGroups: List<MuscleGroup>,
 
     @Enumerated(EnumType.STRING)
     var equipment: Equipment,
