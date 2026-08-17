@@ -16,6 +16,8 @@ class JwtService(
 
     private val signingKey: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
+    val expiresInSeconds: Long = expiration.toSeconds()
+
     fun generateToken(userId: Long): String {
         val now = Date()
         val expiry = Date(now.time + expiration.toMillis())

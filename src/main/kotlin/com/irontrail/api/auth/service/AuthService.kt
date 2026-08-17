@@ -32,7 +32,10 @@ class AuthService(
             passwordHash = passwordEncoder.encode(request.password)!!
         )
         userRepository.save(user)
-        return AuthResponse(jwtService.generateToken(user.userId))
+        return AuthResponse(
+            accessToken = jwtService.generateToken(user.userId),
+            expiresIn = jwtService.expiresInSeconds
+        )
     }
 
     fun login(request: LoginRequest) : AuthResponse {
@@ -44,7 +47,10 @@ class AuthService(
         val user = userRepository.findByEmail(email)
             ?: throw IllegalStateException("Authenticated user not found: $email")
 
-        return AuthResponse(jwtService.generateToken(user.userId))
+        return AuthResponse(
+            accessToken = jwtService.generateToken(user.userId),
+            expiresIn = jwtService.expiresInSeconds
+        )
     }
 
 }

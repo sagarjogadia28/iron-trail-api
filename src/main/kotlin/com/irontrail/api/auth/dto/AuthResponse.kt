@@ -1,5 +1,7 @@
 package com.irontrail.api.auth.dto
 
 data class AuthResponse(
-    val token: String
+    val accessToken: String,
+    val tokenType: String = "Bearer",
+    val expiresIn: Long
 )
