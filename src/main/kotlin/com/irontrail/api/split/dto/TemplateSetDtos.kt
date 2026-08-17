@@ -10,6 +10,14 @@ data class TemplateSetRequest(
     val setType: SetType
 )
 
+data class TemplateSetPatchRequest(
+    val sortOrder: Int? = null,
+    val targetReps: Int? = null,
+    val targetRepsMax: Int? = null,
+    val targetDurationSeconds: Int? = null,
+    val setType: SetType? = null
+)
+
 data class TemplateSetResponse(
     val templateSetId: Long,
     val sortOrder: Int,

@@ -8,6 +8,14 @@ data class TemplateExerciseRequest(
     val notes: String? = null
 )
 
+// exerciseId is deliberately absent — immutable after creation, swapping the exercise is delete+recreate
+data class TemplateExercisePatchRequest(
+    val sortOrder: Int? = null,
+    val restDurationSeconds: Int? = null,
+    val isRepRange: Boolean? = null,
+    val notes: String? = null
+)
+
 data class TemplateExerciseResponse(
     val templateExerciseId: Long,
     val exerciseId: Long,

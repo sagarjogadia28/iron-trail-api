@@ -8,6 +8,11 @@ data class WorkoutDayRequest(
     val sortOrder: Int
 )
 
+data class WorkoutDayPatchRequest(
+    val name: String? = null,
+    val sortOrder: Int? = null
+)
+
 data class WorkoutDayResponse(
     val workoutDayId: Long,
     val name: String,

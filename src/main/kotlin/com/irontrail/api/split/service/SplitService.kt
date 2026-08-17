@@ -3,12 +3,16 @@ package com.irontrail.api.split.service
 import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.repository.ExerciseRepository
 import com.irontrail.api.split.dto.SplitDetailResponse
+import com.irontrail.api.split.dto.SplitPatchRequest
 import com.irontrail.api.split.dto.SplitRequest
 import com.irontrail.api.split.dto.SplitResponse
+import com.irontrail.api.split.dto.TemplateExercisePatchRequest
 import com.irontrail.api.split.dto.TemplateExerciseRequest
 import com.irontrail.api.split.dto.TemplateExerciseResponse
+import com.irontrail.api.split.dto.TemplateSetPatchRequest
 import com.irontrail.api.split.dto.TemplateSetRequest
 import com.irontrail.api.split.dto.TemplateSetResponse
+import com.irontrail.api.split.dto.WorkoutDayPatchRequest
 import com.irontrail.api.split.dto.WorkoutDayRequest
 import com.irontrail.api.split.dto.WorkoutDayResponse
 import com.irontrail.api.split.model.Split
@@ -61,9 +65,9 @@ class SplitService(
         return SplitDetailResponse(splitId = saved.splitId, name = saved.name, workoutDays = emptyList())
     }
 
-    fun update(splitId: Long, request: SplitRequest, userId: Long): SplitDetailResponse {
+    fun update(splitId: Long, request: SplitPatchRequest, userId: Long): SplitDetailResponse {
         val split = ownershipResolver.getOwnedSplit(splitId, userId)
-        split.name = request.name
+        request.name?.let { split.name = it }
         val workoutDays = buildWorkoutDayTree(listOf(split)).getValue(split.splitId)
         return SplitDetailResponse(splitId = split.splitId, name = split.name, workoutDays = workoutDays)
     }
@@ -82,10 +86,10 @@ class SplitService(
         return saved.toResponse(emptyList())
     }
 
-    fun updateWorkoutDay(workoutDayId: Long, request: WorkoutDayRequest, userId: Long): WorkoutDayResponse {
+    fun updateWorkoutDay(workoutDayId: Long, request: WorkoutDayPatchRequest, userId: Long): WorkoutDayResponse {
         val workoutDay = ownershipResolver.getOwnedWorkoutDay(workoutDayId, userId)
-        workoutDay.name = request.name
-        workoutDay.sortOrder = request.sortOrder
+        request.name?.let { workoutDay.name = it }
+        request.sortOrder?.let { workoutDay.sortOrder = it }
         return workoutDay.toResponse(buildTemplateExerciseResponses(workoutDay))
     }
 
@@ -113,16 +117,12 @@ class SplitService(
         return saved.toResponse(emptyList())
     }
 
-    fun updateTemplateExercise(templateExerciseId: Long, request: TemplateExerciseRequest, userId: Long): TemplateExerciseResponse {
+    fun updateTemplateExercise(templateExerciseId: Long, request: TemplateExercisePatchRequest, userId: Long): TemplateExerciseResponse {
         val templateExercise = ownershipResolver.getOwnedTemplateExercise(templateExerciseId, userId)
-        if (!exerciseRepository.existsVisibleById(request.exerciseId, userId))
-            throw NotFoundException("Exercise", request.exerciseId)
-
-        templateExercise.exerciseId = request.exerciseId
-        templateExercise.sortOrder = request.sortOrder
-        templateExercise.restDurationSeconds = request.restDurationSeconds
-        templateExercise.isRepRange = request.isRepRange
-        templateExercise.notes = request.notes
+        request.sortOrder?.let { templateExercise.sortOrder = it }
+        request.restDurationSeconds?.let { templateExercise.restDurationSeconds = it }
+        request.isRepRange?.let { templateExercise.isRepRange = it }
+        request.notes?.let { templateExercise.notes = it }
         return templateExercise.toResponse(buildTemplateSetResponses(templateExercise))
     }
 
@@ -146,13 +146,13 @@ class SplitService(
         return saved.toResponse()
     }
 
-    fun updateTemplateSet(templateSetId: Long, request: TemplateSetRequest, userId: Long): TemplateSetResponse {
+    fun updateTemplateSet(templateSetId: Long, request: TemplateSetPatchRequest, userId: Long): TemplateSetResponse {
         val templateSet = ownershipResolver.getOwnedTemplateSet(templateSetId, userId)
-        templateSet.sortOrder = request.sortOrder
-        templateSet.targetReps = request.targetReps
-        templateSet.targetRepsMax = request.targetRepsMax
-        templateSet.targetDurationSeconds = request.targetDurationSeconds
-        templateSet.setType = request.setType
+        request.sortOrder?.let { templateSet.sortOrder = it }
+        request.targetReps?.let { templateSet.targetReps = it }
+        request.targetRepsMax?.let { templateSet.targetRepsMax = it }
+        request.targetDurationSeconds?.let { templateSet.targetDurationSeconds = it }
+        request.setType?.let { templateSet.setType = it }
         return templateSet.toResponse()
     }
 

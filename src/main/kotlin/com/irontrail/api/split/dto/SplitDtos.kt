@@ -7,6 +7,10 @@ data class SplitRequest(
     val name: String
 )
 
+data class SplitPatchRequest(
+    val name: String? = null
+)
+
 data class SplitResponse(
     val splitId: Long,
     val name: String,
