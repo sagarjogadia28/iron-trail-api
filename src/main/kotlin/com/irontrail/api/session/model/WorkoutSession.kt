@@ -30,9 +30,6 @@ class WorkoutSession(
     @Column(name = "started_at")
     var startedAt: OffsetDateTime,
 
-    @Column(name = "ended_at")
-    var endedAt: OffsetDateTime? = null,
-
     @Column(name = "duration_seconds")
     var durationSeconds: Long,
 
