@@ -2,6 +2,7 @@ package com.irontrail.api.split.controller
 
 import com.irontrail.api.split.dto.TemplateExerciseRequest
 import com.irontrail.api.split.dto.TemplateExerciseResponse
+import com.irontrail.api.split.dto.WorkoutDayDuplicateRequest
 import com.irontrail.api.split.dto.WorkoutDayPatchRequest
 import com.irontrail.api.split.dto.WorkoutDayRequest
 import com.irontrail.api.split.dto.WorkoutDayResponse
@@ -34,6 +35,16 @@ class WorkoutDayController(
     fun delete(@PathVariable workoutDayId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
         splitService.deleteWorkoutDay(workoutDayId, userId)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{workoutDayId}/duplicate")
+    fun duplicate(
+        @PathVariable workoutDayId: Long,
+        @Valid @RequestBody request: WorkoutDayDuplicateRequest,
+        @AuthenticationPrincipal userId: Long
+    ): ResponseEntity<WorkoutDayResponse> {
+        val duplicated = splitService.duplicateWorkoutDay(workoutDayId, request, userId)
+        return ResponseEntity.status(HttpStatus.CREATED).body(duplicated)
     }
 
     @PostMapping("/{workoutDayId}/template-exercises")

@@ -13,6 +13,12 @@ data class WorkoutDayPatchRequest(
     val sortOrder: Int? = null
 )
 
+data class WorkoutDayDuplicateRequest(
+    @field:NotBlank
+    val name: String,
+    val sortOrder: Int
+)
+
 data class WorkoutDayResponse(
     val workoutDayId: Long,
     val name: String,

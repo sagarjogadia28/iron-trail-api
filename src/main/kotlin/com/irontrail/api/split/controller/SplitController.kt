@@ -1,6 +1,7 @@
 package com.irontrail.api.split.controller
 
 import com.irontrail.api.split.dto.SplitDetailResponse
+import com.irontrail.api.split.dto.SplitDuplicateRequest
 import com.irontrail.api.split.dto.SplitPatchRequest
 import com.irontrail.api.split.dto.SplitRequest
 import com.irontrail.api.split.dto.SplitResponse
@@ -49,6 +50,14 @@ class SplitController(
     fun delete(@PathVariable splitId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
         splitService.delete(splitId, userId)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/{splitId}/duplicate")
+    fun duplicate(
+        @PathVariable splitId: Long, @Valid @RequestBody request: SplitDuplicateRequest, @AuthenticationPrincipal userId: Long
+    ): ResponseEntity<SplitDetailResponse> {
+        val duplicated = splitService.duplicateSplit(splitId, request, userId)
+        return ResponseEntity.status(HttpStatus.CREATED).body(duplicated)
     }
 
     @PostMapping("/{splitId}/workout-days")

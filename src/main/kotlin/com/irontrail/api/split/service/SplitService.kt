@@ -3,6 +3,7 @@ package com.irontrail.api.split.service
 import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.repository.ExerciseRepository
 import com.irontrail.api.split.dto.SplitDetailResponse
+import com.irontrail.api.split.dto.SplitDuplicateRequest
 import com.irontrail.api.split.dto.SplitPatchRequest
 import com.irontrail.api.split.dto.SplitRequest
 import com.irontrail.api.split.dto.SplitResponse
@@ -12,6 +13,7 @@ import com.irontrail.api.split.dto.TemplateExerciseResponse
 import com.irontrail.api.split.dto.TemplateSetPatchRequest
 import com.irontrail.api.split.dto.TemplateSetRequest
 import com.irontrail.api.split.dto.TemplateSetResponse
+import com.irontrail.api.split.dto.WorkoutDayDuplicateRequest
 import com.irontrail.api.split.dto.WorkoutDayPatchRequest
 import com.irontrail.api.split.dto.WorkoutDayRequest
 import com.irontrail.api.split.dto.WorkoutDayResponse
@@ -77,6 +79,49 @@ class SplitService(
         splitRepository.delete(split)
     }
 
+    fun duplicateSplit(splitId: Long, request: SplitDuplicateRequest, userId: Long): SplitDetailResponse {
+        val sourceSplit = ownershipResolver.getOwnedSplit(splitId, userId)
+        val sourceDays = workoutDayRepository.findBySplitIdIn(listOf(sourceSplit.splitId))
+        val sourceExercises = templateExerciseRepository.findByWorkoutDayIdIn(sourceDays.map { it.workoutDayId })
+        val sourceSets = templateSetRepository.findByTemplateExerciseIn(sourceExercises)
+
+        val newSplit = splitRepository.save(Split(ownerId = userId, name = request.name))
+
+        val newDays = workoutDayRepository.saveAll(
+            sourceDays.map { WorkoutDay(splitId = newSplit.splitId, name = it.name, sortOrder = it.sortOrder) }
+        )
+        val newDayIdByOldDayId = sourceDays.map { it.workoutDayId }.zip(newDays.map { it.workoutDayId }).toMap()
+
+        val newExercises = templateExerciseRepository.saveAll(
+            sourceExercises.map {
+                TemplateExercise(
+                    workoutDayId = newDayIdByOldDayId.getValue(it.workoutDayId),
+                    exerciseId = it.exerciseId,
+                    sortOrder = it.sortOrder,
+                    restDurationSeconds = it.restDurationSeconds,
+                    isRepRange = it.isRepRange,
+                    notes = it.notes
+                )
+            }
+        )
+        val newExerciseByOldExerciseId = sourceExercises.map { it.templateExerciseId }.zip(newExercises).toMap()
+
+        templateSetRepository.saveAll(
+            sourceSets.map {
+                TemplateSet(
+                    sortOrder = it.sortOrder,
+                    targetReps = it.targetReps,
+                    targetRepsMax = it.targetRepsMax,
+                    targetDurationSeconds = it.targetDurationSeconds,
+                    setType = it.setType
+                ).apply { templateExercise = newExerciseByOldExerciseId.getValue(it.templateExercise.templateExerciseId) }
+            }
+        )
+
+        val workoutDays = buildWorkoutDayTree(listOf(newSplit)).getValue(newSplit.splitId)
+        return SplitDetailResponse(splitId = newSplit.splitId, name = newSplit.name, workoutDays = workoutDays)
+    }
+
     //WorkoutDay
     fun createWorkoutDay(splitId: Long, request: WorkoutDayRequest, userId: Long): WorkoutDayResponse {
         ownershipResolver.getOwnedSplit(splitId, userId)
@@ -96,6 +141,44 @@ class SplitService(
     fun deleteWorkoutDay(workoutDayId: Long, userId: Long) {
         val workoutDay = ownershipResolver.getOwnedWorkoutDay(workoutDayId, userId)
         workoutDayRepository.delete(workoutDay)
+    }
+
+    fun duplicateWorkoutDay(workoutDayId: Long, request: WorkoutDayDuplicateRequest, userId: Long): WorkoutDayResponse {
+        val sourceDay = ownershipResolver.getOwnedWorkoutDay(workoutDayId, userId)
+        val sourceExercises = templateExerciseRepository.findByWorkoutDayIdIn(listOf(sourceDay.workoutDayId))
+        val sourceSets = templateSetRepository.findByTemplateExerciseIn(sourceExercises)
+
+        val newDay = workoutDayRepository.save(
+            WorkoutDay(splitId = sourceDay.splitId, name = request.name, sortOrder = request.sortOrder)
+        )
+
+        val newExercises = templateExerciseRepository.saveAll(
+            sourceExercises.map {
+                TemplateExercise(
+                    workoutDayId = newDay.workoutDayId,
+                    exerciseId = it.exerciseId,
+                    sortOrder = it.sortOrder,
+                    restDurationSeconds = it.restDurationSeconds,
+                    isRepRange = it.isRepRange,
+                    notes = it.notes
+                )
+            }
+        )
+        val newExerciseByOldExerciseId = sourceExercises.map { it.templateExerciseId }.zip(newExercises).toMap()
+
+        templateSetRepository.saveAll(
+            sourceSets.map {
+                TemplateSet(
+                    sortOrder = it.sortOrder,
+                    targetReps = it.targetReps,
+                    targetRepsMax = it.targetRepsMax,
+                    targetDurationSeconds = it.targetDurationSeconds,
+                    setType = it.setType
+                ).apply { templateExercise = newExerciseByOldExerciseId.getValue(it.templateExercise.templateExerciseId) }
+            }
+        )
+
+        return newDay.toResponse(buildTemplateExerciseResponses(newDay))
     }
 
     //TemplateExercise
