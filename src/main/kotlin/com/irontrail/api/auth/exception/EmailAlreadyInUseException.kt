@@ -1,3 +1,5 @@
 package com.irontrail.api.auth.exception
 
-class EmailAlreadyInUseException(email: String) : RuntimeException("Email already in use: $email")
+import com.irontrail.api.common.ConflictException
+
+class EmailAlreadyInUseException(email: String) : ConflictException("Email already in use: $email")

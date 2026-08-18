@@ -1,8 +1,9 @@
 package com.irontrail.api.common
 
-import com.irontrail.api.auth.exception.EmailAlreadyInUseException
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -36,10 +37,20 @@ class GlobalExceptionHandler {
             .body(ValidationErrorResponse(status = HttpStatus.BAD_REQUEST.value(), errors = errors))
     }
 
-    @ExceptionHandler(EmailAlreadyInUseException::class)
-    fun handleEmailInUse(ex: EmailAlreadyInUseException): ResponseEntity<ErrorResponse> =
+    @ExceptionHandler(ConflictException::class)
+    fun handleConflict(ex: ConflictException): ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.CONFLICT)
-            .body(ErrorResponse(status = HttpStatus.CONFLICT.value(), message = ex.message ?: "Email already in use"))
+            .body(ErrorResponse(status = HttpStatus.CONFLICT.value(), message = ex.message ?: "Conflict"))
+
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolation(ex: DataIntegrityViolationException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.CONFLICT)
+            .body(ErrorResponse(status = HttpStatus.CONFLICT.value(), message = "Request conflicts with existing data"))
+
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleMalformedRequest(ex: HttpMessageNotReadableException): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(ErrorResponse(status = HttpStatus.BAD_REQUEST.value(), message = "Malformed or incomplete request body"))
 
     @ExceptionHandler(BadCredentialsException::class)
     fun handleBadCredentials(ex: BadCredentialsException): ResponseEntity<ErrorResponse> =
