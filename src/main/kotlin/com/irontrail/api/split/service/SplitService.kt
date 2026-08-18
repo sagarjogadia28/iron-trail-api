@@ -3,7 +3,6 @@ package com.irontrail.api.split.service
 import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.repository.ExerciseRepository
 import com.irontrail.api.split.dto.SplitDetailResponse
-import com.irontrail.api.split.dto.SplitDuplicateRequest
 import com.irontrail.api.split.dto.SplitPatchRequest
 import com.irontrail.api.split.dto.SplitRequest
 import com.irontrail.api.split.dto.SplitResponse
@@ -13,7 +12,6 @@ import com.irontrail.api.split.dto.TemplateExerciseResponse
 import com.irontrail.api.split.dto.TemplateSetPatchRequest
 import com.irontrail.api.split.dto.TemplateSetRequest
 import com.irontrail.api.split.dto.TemplateSetResponse
-import com.irontrail.api.split.dto.WorkoutDayDuplicateRequest
 import com.irontrail.api.split.dto.WorkoutDayPatchRequest
 import com.irontrail.api.split.dto.WorkoutDayRequest
 import com.irontrail.api.split.dto.WorkoutDayResponse
@@ -79,7 +77,7 @@ class SplitService(
         splitRepository.delete(split)
     }
 
-    fun duplicateSplit(splitId: Long, request: SplitDuplicateRequest, userId: Long): SplitDetailResponse {
+    fun duplicateSplit(splitId: Long, request: SplitRequest, userId: Long): SplitDetailResponse {
         val sourceSplit = ownershipResolver.getOwnedSplit(splitId, userId)
         val sourceDays = workoutDayRepository.findBySplitIdIn(listOf(sourceSplit.splitId))
         val sourceExercises = templateExerciseRepository.findByWorkoutDayIdIn(sourceDays.map { it.workoutDayId })
@@ -143,7 +141,7 @@ class SplitService(
         workoutDayRepository.delete(workoutDay)
     }
 
-    fun duplicateWorkoutDay(workoutDayId: Long, request: WorkoutDayDuplicateRequest, userId: Long): WorkoutDayResponse {
+    fun duplicateWorkoutDay(workoutDayId: Long, request: WorkoutDayRequest, userId: Long): WorkoutDayResponse {
         val sourceDay = ownershipResolver.getOwnedWorkoutDay(workoutDayId, userId)
         val sourceExercises = templateExerciseRepository.findByWorkoutDayIdIn(listOf(sourceDay.workoutDayId))
         val sourceSets = templateSetRepository.findByTemplateExerciseIn(sourceExercises)

@@ -11,11 +11,6 @@ data class SplitPatchRequest(
     val name: String? = null
 )
 
-data class SplitDuplicateRequest(
-    @field:NotBlank
-    val name: String
-)
-
 data class SplitResponse(
     val splitId: Long,
     val name: String,
