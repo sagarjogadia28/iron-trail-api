@@ -1,6 +1,7 @@
 package com.irontrail.api.split.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Pattern
 
 data class SplitRequest(
     @field:NotBlank
@@ -8,6 +9,7 @@ data class SplitRequest(
 )
 
 data class SplitPatchRequest(
+    @field:Pattern(regexp = ".*\\S.*", message = "must not be blank")
     val name: String? = null
 )
 

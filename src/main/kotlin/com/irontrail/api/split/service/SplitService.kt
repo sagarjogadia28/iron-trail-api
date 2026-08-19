@@ -1,5 +1,6 @@
 package com.irontrail.api.split.service
 
+import com.irontrail.api.common.BadRequestException
 import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.repository.ExerciseRepository
 import com.irontrail.api.split.dto.SplitDetailResponse
@@ -90,31 +91,7 @@ class SplitService(
         )
         val newDayIdByOldDayId = sourceDays.map { it.workoutDayId }.zip(newDays.map { it.workoutDayId }).toMap()
 
-        val newExercises = templateExerciseRepository.saveAll(
-            sourceExercises.map {
-                TemplateExercise(
-                    workoutDayId = newDayIdByOldDayId.getValue(it.workoutDayId),
-                    exerciseId = it.exerciseId,
-                    sortOrder = it.sortOrder,
-                    restDurationSeconds = it.restDurationSeconds,
-                    isRepRange = it.isRepRange,
-                    notes = it.notes
-                )
-            }
-        )
-        val newExerciseByOldExerciseId = sourceExercises.map { it.templateExerciseId }.zip(newExercises).toMap()
-
-        templateSetRepository.saveAll(
-            sourceSets.map {
-                TemplateSet(
-                    sortOrder = it.sortOrder,
-                    targetReps = it.targetReps,
-                    targetRepsMax = it.targetRepsMax,
-                    targetDurationSeconds = it.targetDurationSeconds,
-                    setType = it.setType
-                ).apply { templateExercise = newExerciseByOldExerciseId.getValue(it.templateExercise.templateExerciseId) }
-            }
-        )
+        copyTemplateExercisesAndSets(sourceExercises, sourceSets) { oldDayId -> newDayIdByOldDayId.getValue(oldDayId) }
 
         val workoutDays = buildWorkoutDayTree(listOf(newSplit)).getValue(newSplit.splitId)
         return SplitDetailResponse(splitId = newSplit.splitId, name = newSplit.name, workoutDays = workoutDays)
@@ -150,31 +127,7 @@ class SplitService(
             WorkoutDay(splitId = sourceDay.splitId, name = request.name, sortOrder = request.sortOrder)
         )
 
-        val newExercises = templateExerciseRepository.saveAll(
-            sourceExercises.map {
-                TemplateExercise(
-                    workoutDayId = newDay.workoutDayId,
-                    exerciseId = it.exerciseId,
-                    sortOrder = it.sortOrder,
-                    restDurationSeconds = it.restDurationSeconds,
-                    isRepRange = it.isRepRange,
-                    notes = it.notes
-                )
-            }
-        )
-        val newExerciseByOldExerciseId = sourceExercises.map { it.templateExerciseId }.zip(newExercises).toMap()
-
-        templateSetRepository.saveAll(
-            sourceSets.map {
-                TemplateSet(
-                    sortOrder = it.sortOrder,
-                    targetReps = it.targetReps,
-                    targetRepsMax = it.targetRepsMax,
-                    targetDurationSeconds = it.targetDurationSeconds,
-                    setType = it.setType
-                ).apply { templateExercise = newExerciseByOldExerciseId.getValue(it.templateExercise.templateExerciseId) }
-            }
-        )
+        copyTemplateExercisesAndSets(sourceExercises, sourceSets) { newDay.workoutDayId }
 
         return newDay.toResponse(buildTemplateExerciseResponses(newDay))
     }
@@ -215,6 +168,7 @@ class SplitService(
     //TemplateSet
     fun createTemplateSet(templateExerciseId: Long, request: TemplateSetRequest, userId: Long): TemplateSetResponse {
         val parentExercise = ownershipResolver.getOwnedTemplateExercise(templateExerciseId, userId)
+        validateRepRange(request.targetReps, request.targetRepsMax)
         val saved = templateSetRepository.save(
             TemplateSet(
                 sortOrder = request.sortOrder,
@@ -234,6 +188,7 @@ class SplitService(
         request.targetRepsMax?.let { templateSet.targetRepsMax = it }
         request.targetDurationSeconds?.let { templateSet.targetDurationSeconds = it }
         request.setType?.let { templateSet.setType = it }
+        validateRepRange(templateSet.targetReps, templateSet.targetRepsMax)
         return templateSet.toResponse()
     }
 
@@ -277,6 +232,44 @@ class SplitService(
 
     private fun buildTemplateSetResponses(templateExercise: TemplateExercise): List<TemplateSetResponse> =
         templateExercise.sets.sortedBy { it.sortOrder }.map { it.toResponse() }
+
+    private fun copyTemplateExercisesAndSets(
+        sourceExercises: List<TemplateExercise>,
+        sourceSets: List<TemplateSet>,
+        resolveNewWorkoutDayId: (Long) -> Long
+    ) {
+        val newExercises = templateExerciseRepository.saveAll(
+            sourceExercises.map {
+                TemplateExercise(
+                    workoutDayId = resolveNewWorkoutDayId(it.workoutDayId),
+                    exerciseId = it.exerciseId,
+                    sortOrder = it.sortOrder,
+                    restDurationSeconds = it.restDurationSeconds,
+                    isRepRange = it.isRepRange,
+                    notes = it.notes
+                )
+            }
+        )
+        val newExerciseByOldExerciseId = sourceExercises.map { it.templateExerciseId }.zip(newExercises).toMap()
+
+        templateSetRepository.saveAll(
+            sourceSets.map {
+                TemplateSet(
+                    sortOrder = it.sortOrder,
+                    targetReps = it.targetReps,
+                    targetRepsMax = it.targetRepsMax,
+                    targetDurationSeconds = it.targetDurationSeconds,
+                    setType = it.setType
+                ).apply { templateExercise = newExerciseByOldExerciseId.getValue(it.templateExercise.templateExerciseId) }
+            }
+        )
+    }
+
+    private fun validateRepRange(targetReps: Int?, targetRepsMax: Int?) {
+        if (targetReps != null && targetRepsMax != null && targetReps > targetRepsMax) {
+            throw BadRequestException("targetReps must not exceed targetRepsMax")
+        }
+    }
 
     private fun WorkoutDay.toResponse(templateExercises: List<TemplateExerciseResponse>) = WorkoutDayResponse(
         workoutDayId = workoutDayId,

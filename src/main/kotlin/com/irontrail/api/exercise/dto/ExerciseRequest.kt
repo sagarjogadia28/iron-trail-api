@@ -5,6 +5,7 @@ import com.irontrail.api.exercise.model.ExerciseInputType
 import com.irontrail.api.exercise.model.MuscleGroup
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 
 data class ExerciseRequest(
     @field:NotBlank
@@ -28,6 +29,7 @@ data class ExerciseRequest(
 // already-set nullable field like `description` cannot be cleared back to null via PATCH
 // with this simple approach (would need a JSON Merge Patch-aware wrapper type to do that).
 data class ExercisePatchRequest(
+    @field:Pattern(regexp = ".*\\S.*", message = "must not be blank")
     val name: String? = null,
     val primaryMuscleGroup: MuscleGroup? = null,
     val secondaryMuscleGroups: List<MuscleGroup>? = null,

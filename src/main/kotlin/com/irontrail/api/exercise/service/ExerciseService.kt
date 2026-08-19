@@ -18,7 +18,11 @@ class ExerciseService(
 
     fun findAll(search: String?, muscleGroups: List<MuscleGroup>?, userId: Long): List<ExerciseResponse> {
         val groups = muscleGroups ?: emptyList()
-        return exerciseRepository.findVisibleBySearchAndMuscleGroups(search ?: "", groups.isNotEmpty(), groups, userId)
+        val escapedSearch = (search ?: "")
+            .replace("\\", "\\\\")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+        return exerciseRepository.findVisibleBySearchAndMuscleGroups(escapedSearch, groups.isNotEmpty(), groups, userId)
             .map { it.toResponse() }
     }
 

@@ -10,6 +10,6 @@ data class RegisterRequest(
     val email: String,
 
     @field:NotBlank
-    @field:Size(min = 8)
+    @field:Size(min = 8, max = 72)
     val password: String
 )
