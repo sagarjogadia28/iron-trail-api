@@ -13,6 +13,7 @@ import com.irontrail.api.session.dto.WorkoutSessionDetailResponse
 import com.irontrail.api.session.dto.WorkoutSessionPatchRequest
 import com.irontrail.api.session.dto.WorkoutSessionRequest
 import com.irontrail.api.session.dto.WorkoutSessionResponse
+import com.irontrail.api.session.dto.toWorkoutSessionResponse
 import com.irontrail.api.session.model.SessionExercise
 import com.irontrail.api.session.model.SessionSet
 import com.irontrail.api.session.model.SessionStatus
@@ -44,11 +45,11 @@ class WorkoutSessionService(
         workoutSessionRepository.findByOwnerId(userId)
             .filter { splitName == null || it.splitNameSnapshot == splitName }
             .sortedByDescending { it.startedAt }
-            .map { it.toResponse() }
+            .map { it.toWorkoutSessionResponse() }
 
     fun findActive(userId: Long): WorkoutSessionResponse? =
         workoutSessionRepository.findByOwnerIdAndStatusIn(userId, listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED))
-            ?.toResponse()
+            ?.toWorkoutSessionResponse()
 
     fun findById(sessionId: Long, userId: Long): WorkoutSessionDetailResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
@@ -221,22 +222,8 @@ class WorkoutSessionService(
     private fun buildSessionSetResponses(sessionExercise: SessionExercise): List<SessionSetResponse> =
         sessionExercise.sets.sortedBy { it.sortOrder }.map { it.toResponse() }
 
-    private fun WorkoutSession.toResponse() = WorkoutSessionResponse(
-        sessionId = sessionId,
-        workoutDayId = workoutDayId,
-        splitNameSnapshot = splitNameSnapshot,
-        workoutDayNameSnapshot = workoutDayNameSnapshot,
-        startedAt = startedAt,
-        durationSeconds = durationSeconds,
-        totalVolumeKg = totalVolumeKg,
-        completedSets = completedSets,
-        totalSets = totalSets,
-        notes = notes,
-        status = status
-    )
-
     private fun WorkoutSession.toDetailResponse(sessionExercises: List<SessionExerciseResponse>) = WorkoutSessionDetailResponse(
-        session = toResponse(),
+        session = toWorkoutSessionResponse(),
         sessionExercises = sessionExercises
     )
 

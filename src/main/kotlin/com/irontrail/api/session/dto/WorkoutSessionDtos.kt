@@ -2,6 +2,7 @@ package com.irontrail.api.session.dto
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped
 import com.irontrail.api.session.model.SessionStatus
+import com.irontrail.api.session.model.WorkoutSession
 import java.time.OffsetDateTime
 
 data class WorkoutSessionRequest(
@@ -35,4 +36,18 @@ data class WorkoutSessionResponse(
 data class WorkoutSessionDetailResponse(
     @get:JsonUnwrapped val session: WorkoutSessionResponse,
     val sessionExercises: List<SessionExerciseResponse>
+)
+
+fun WorkoutSession.toWorkoutSessionResponse() = WorkoutSessionResponse(
+    sessionId = sessionId,
+    workoutDayId = workoutDayId,
+    splitNameSnapshot = splitNameSnapshot,
+    workoutDayNameSnapshot = workoutDayNameSnapshot,
+    startedAt = startedAt,
+    durationSeconds = durationSeconds,
+    totalVolumeKg = totalVolumeKg,
+    completedSets = completedSets,
+    totalSets = totalSets,
+    notes = notes,
+    status = status
 )
