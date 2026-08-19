@@ -8,7 +8,7 @@ interface WorkoutSessionRepository : JpaRepository<WorkoutSession, Long> {
     fun findByOwnerId(ownerId: Long): List<WorkoutSession>
     fun findBySessionIdAndOwnerId(sessionId: Long, ownerId: Long) : WorkoutSession?
     fun findByOwnerIdAndStatusIn(ownerId: Long, status: List<SessionStatus>) : WorkoutSession?
-    fun findByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
+    fun findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
         ownerId: Long, workoutDayId: Long, status: SessionStatus
     ): List<WorkoutSession>
 }

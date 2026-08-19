@@ -146,7 +146,7 @@ class WorkoutSessionService(
         val exerciseId = sessionExercise.exerciseId ?: return emptyList()
 
         val previousSession = workoutSessionRepository
-            .findByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(userId, workoutDayId, SessionStatus.COMPLETED)
+            .findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(userId, workoutDayId, SessionStatus.COMPLETED)
             .firstOrNull { it.sessionId != sessionExercise.workoutSession.sessionId }
             ?: return emptyList()
 
