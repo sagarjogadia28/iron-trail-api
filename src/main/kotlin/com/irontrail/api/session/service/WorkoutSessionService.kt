@@ -140,6 +140,25 @@ class WorkoutSessionService(
         sessionExerciseRepository.delete(sessionExercise)
     }
 
+    fun findPreviousPerformance(sessionExerciseId: Long, userId: Long): List<SessionSetResponse> {
+        val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
+        val workoutDayId = sessionExercise.workoutSession.workoutDayId ?: return emptyList()
+        val exerciseId = sessionExercise.exerciseId ?: return emptyList()
+
+        val previousSession = workoutSessionRepository
+            .findByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(userId, workoutDayId, SessionStatus.COMPLETED)
+            .firstOrNull { it.sessionId != sessionExercise.workoutSession.sessionId }
+            ?: return emptyList()
+
+        val previousExercise = sessionExerciseRepository.findByWorkoutSessionIn(listOf(previousSession))
+            .firstOrNull { it.exerciseId == exerciseId }
+            ?: return emptyList()
+
+        return sessionSetRepository.findBySessionExerciseIn(listOf(previousExercise))
+            .sortedBy { it.sortOrder }
+            .map { it.toResponse() }
+    }
+
     //SessionSet
     fun createSessionSet(sessionExerciseId: Long, request: SessionSetRequest, userId: Long): SessionSetResponse {
         val parentExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
@@ -217,17 +236,7 @@ class WorkoutSessionService(
     )
 
     private fun WorkoutSession.toDetailResponse(sessionExercises: List<SessionExerciseResponse>) = WorkoutSessionDetailResponse(
-        sessionId = sessionId,
-        workoutDayId = workoutDayId,
-        splitNameSnapshot = splitNameSnapshot,
-        workoutDayNameSnapshot = workoutDayNameSnapshot,
-        startedAt = startedAt,
-        durationSeconds = durationSeconds,
-        totalVolumeKg = totalVolumeKg,
-        completedSets = completedSets,
-        totalSets = totalSets,
-        notes = notes,
-        status = status,
+        session = toResponse(),
         sessionExercises = sessionExercises
     )
 
