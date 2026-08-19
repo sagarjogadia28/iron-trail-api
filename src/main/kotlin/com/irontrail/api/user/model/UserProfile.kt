@@ -25,6 +25,9 @@ class UserProfile(
     @Column(name = "measurement_unit")
     var measurementUnit: MeasurementUnit,
 
+    @Column(name = "rest_timer_notifications_enabled")
+    var restTimerNotificationsEnabled: Boolean,
+
     @Column(name = "profile_image_path")
     var profileImagePath: String?,
 
