@@ -7,16 +7,19 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface ExerciseRepository : JpaRepository<Exercise, Long> {
-    fun findByOwnerIdIsNullOrOwnerId(ownerId: Long): List<Exercise>
-
     fun findByExerciseIdAndOwnerId(exerciseId: Long, ownerId: Long): Exercise?
 
     @Query(
-        "SELECT e FROM Exercise e WHERE (e.primaryMuscleGroup = :muscleGroup OR :muscleGroup MEMBER OF e.secondaryMuscleGroups) " +
-            "AND (e.ownerId IS NULL OR e.ownerId = :ownerId)"
+        "SELECT e FROM Exercise e WHERE (e.ownerId IS NULL OR e.ownerId = :ownerId) " +
+            "AND LOWER(e.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "AND (:hasMuscleFilter = false OR e.primaryMuscleGroup IN :muscleGroups " +
+            "OR EXISTS (SELECT sg FROM e.secondaryMuscleGroups sg WHERE sg IN :muscleGroups))"
     )
-    fun findVisibleByMuscleGroup(
-        @Param("muscleGroup") muscleGroup: MuscleGroup, @Param("ownerId") ownerId: Long
+    fun findVisibleBySearchAndMuscleGroups(
+        @Param("search") search: String,
+        @Param("hasMuscleFilter") hasMuscleFilter: Boolean,
+        @Param("muscleGroups") muscleGroups: List<MuscleGroup>,
+        @Param("ownerId") ownerId: Long
     ): List<Exercise>
 
     @Query("SELECT e FROM Exercise e WHERE e.exerciseId = :id AND (e.ownerId IS NULL OR e.ownerId = :ownerId)")

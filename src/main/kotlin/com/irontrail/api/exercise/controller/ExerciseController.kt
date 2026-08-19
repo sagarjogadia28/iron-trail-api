@@ -27,9 +27,10 @@ class ExerciseController(
 
     @GetMapping
     fun findAll(
-        @RequestParam(required = false) muscleGroup: MuscleGroup?,
+        @RequestParam(required = false) search: String?,
+        @RequestParam(required = false) muscleGroups: List<MuscleGroup>?,
         @AuthenticationPrincipal userId: Long
-    ): List<ExerciseResponse> = exerciseService.findAll(muscleGroup, userId)
+    ): List<ExerciseResponse> = exerciseService.findAll(search, muscleGroups, userId)
 
     @GetMapping("/{id}")
     fun findById(@PathVariable id: Long, @AuthenticationPrincipal userId: Long): ExerciseResponse =

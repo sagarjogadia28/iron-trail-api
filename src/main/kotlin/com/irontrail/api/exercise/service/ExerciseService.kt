@@ -16,10 +16,11 @@ class ExerciseService(
     private val exerciseRepository: ExerciseRepository
 ) {
 
-    fun findAll(muscleGroup: MuscleGroup?, userId: Long): List<ExerciseResponse> =
-        (if (muscleGroup != null) exerciseRepository.findVisibleByMuscleGroup(muscleGroup, userId)
-        else exerciseRepository.findByOwnerIdIsNullOrOwnerId(userId))
+    fun findAll(search: String?, muscleGroups: List<MuscleGroup>?, userId: Long): List<ExerciseResponse> {
+        val groups = muscleGroups ?: emptyList()
+        return exerciseRepository.findVisibleBySearchAndMuscleGroups(search ?: "", groups.isNotEmpty(), groups, userId)
             .map { it.toResponse() }
+    }
 
     fun findById(id: Long, userId: Long): ExerciseResponse =
         exerciseRepository.findVisibleById(id, userId)?.toResponse()
