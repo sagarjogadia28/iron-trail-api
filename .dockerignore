@@ -1,0 +1,17 @@
+# Build output
+build/
+out/
+
+# Gradle local cache
+.gradle/
+
+# IDE
+.idea/
+*.iml
+
+# Version control
+.git/
+.gitignore
+
+# Docs — not needed inside the image
+*.md

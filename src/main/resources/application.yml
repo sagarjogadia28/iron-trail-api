@@ -2,7 +2,7 @@ spring:
   application:
     name: api
   datasource:
-    url: jdbc:postgresql://localhost:5432/irontrail
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/irontrail
     username: ${DB_USERNAME:irontrail}
     password: ${DB_PASSWORD:irontrail_dev}
   jpa:

@@ -10,6 +10,23 @@ services:
       - "5432:5432"
     volumes:
       - irontrail_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U irontrail -d irontrail" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+    container_name: irontrail-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+    ports:
+      - "8080:8080"
 
 volumes:
   irontrail_postgres_data:
