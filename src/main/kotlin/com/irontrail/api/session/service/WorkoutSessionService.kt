@@ -1,5 +1,6 @@
 package com.irontrail.api.session.service
 
+import com.irontrail.api.common.BadRequestException
 import com.irontrail.api.common.ConflictException
 import com.irontrail.api.common.NotFoundException
 import com.irontrail.api.exercise.repository.ExerciseRepository
@@ -89,9 +90,15 @@ class WorkoutSessionService(
 
     fun update(sessionId: Long, request: WorkoutSessionPatchRequest, userId: Long): WorkoutSessionDetailResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
+        val wasAlreadyCompleted = session.status == SessionStatus.COMPLETED
         request.status?.let { newStatus ->
             validateStatusTransition(session, newStatus, userId)
             session.status = newStatus
+        }
+        val hasOtherFieldChanges = request.durationSeconds != null || request.totalVolumeKg != null ||
+            request.completedSets != null || request.totalSets != null || request.notes != null
+        if (wasAlreadyCompleted && hasOtherFieldChanges) {
+            throw ConflictException("Cannot modify a completed session")
         }
         request.durationSeconds?.let { session.durationSeconds = it }
         request.totalVolumeKg?.let { session.totalVolumeKg = it }
@@ -110,6 +117,7 @@ class WorkoutSessionService(
     //SessionExercise
     fun createSessionExercise(sessionId: Long, request: SessionExerciseRequest, userId: Long): SessionExerciseResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
+        requireSessionNotCompleted(session)
         val exercise = exerciseRepository.findVisibleById(request.exerciseId, userId)
             ?: throw NotFoundException("Exercise", request.exerciseId)
 
@@ -129,6 +137,7 @@ class WorkoutSessionService(
 
     fun updateSessionExercise(sessionExerciseId: Long, request: SessionExercisePatchRequest, userId: Long): SessionExerciseResponse {
         val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
+        requireSessionNotCompleted(sessionExercise.workoutSession)
         request.sortOrder?.let { sessionExercise.sortOrder = it }
         request.restDurationSeconds?.let { sessionExercise.restDurationSeconds = it }
         request.isRepRange?.let { sessionExercise.isRepRange = it }
@@ -138,6 +147,7 @@ class WorkoutSessionService(
 
     fun deleteSessionExercise(sessionExerciseId: Long, userId: Long) {
         val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
+        requireSessionNotCompleted(sessionExercise.workoutSession)
         sessionExerciseRepository.delete(sessionExercise)
     }
 
@@ -163,6 +173,8 @@ class WorkoutSessionService(
     //SessionSet
     fun createSessionSet(sessionExerciseId: Long, request: SessionSetRequest, userId: Long): SessionSetResponse {
         val parentExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
+        requireSessionNotCompleted(parentExercise.workoutSession)
+        validateRepRange(request.targetReps, request.targetRepsMax)
         val saved = sessionSetRepository.save(
             SessionSet(
                 sortOrder = request.sortOrder,
@@ -178,17 +190,20 @@ class WorkoutSessionService(
 
     fun updateSessionSet(sessionSetId: Long, request: SessionSetPatchRequest, userId: Long): SessionSetResponse {
         val sessionSet = ownershipResolver.getOwnedSessionSet(sessionSetId, userId)
+        requireSessionNotCompleted(sessionSet.sessionExercise.workoutSession)
         request.sortOrder?.let { sessionSet.sortOrder = it }
         request.setType?.let { sessionSet.setType = it }
         request.reps?.let { sessionSet.reps = it }
         request.weightKg?.let { sessionSet.weightKg = it }
         request.durationSeconds?.let { sessionSet.durationSeconds = it }
         request.isCompleted?.let { sessionSet.isCompleted = it }
+        validateRepRange(sessionSet.targetReps, sessionSet.targetRepsMax)
         return sessionSet.toResponse()
     }
 
     fun deleteSessionSet(sessionSetId: Long, userId: Long) {
         val sessionSet = ownershipResolver.getOwnedSessionSet(sessionSetId, userId)
+        requireSessionNotCompleted(sessionSet.sessionExercise.workoutSession)
         sessionSetRepository.delete(sessionSet)
     }
 
@@ -201,6 +216,18 @@ class WorkoutSessionService(
             if (existingActive != null && existingActive.sessionId != session.sessionId) {
                 throw ConflictException("An active session already exists")
             }
+        }
+    }
+
+    private fun requireSessionNotCompleted(session: WorkoutSession) {
+        if (session.status == SessionStatus.COMPLETED) {
+            throw ConflictException("Cannot modify exercises or sets of a completed session")
+        }
+    }
+
+    private fun validateRepRange(targetReps: Int?, targetRepsMax: Int?) {
+        if (targetReps != null && targetRepsMax != null && targetReps > targetRepsMax) {
+            throw BadRequestException("targetReps must not exceed targetRepsMax")
         }
     }
 

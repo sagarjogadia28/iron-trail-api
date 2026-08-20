@@ -72,4 +72,9 @@ class GlobalExceptionHandler {
     fun handleIllegalState(ex: IllegalStateException) : ResponseEntity<ErrorResponse> =
         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(ErrorResponse(status = HttpStatus.INTERNAL_SERVER_ERROR.value(), message = "Internal server error"))
+
+    @ExceptionHandler(Exception::class)
+    fun handleUnexpected(ex: Exception): ResponseEntity<ErrorResponse> =
+        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ErrorResponse(status = HttpStatus.INTERNAL_SERVER_ERROR.value(), message = "Internal server error"))
 }

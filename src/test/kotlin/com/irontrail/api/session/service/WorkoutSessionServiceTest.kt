@@ -401,16 +401,14 @@ class WorkoutSessionServiceTest {
     }
 
     @Test
-    fun `update patching only notes on a COMPLETED session does not touch status validation and succeeds`() {
-        val s = session(id = 1L, status = SessionStatus.COMPLETED)
+    fun `update rejects patching notes on an already-COMPLETED session`() {
+        val s = session(id = 1L, status = SessionStatus.COMPLETED).apply { notes = "original" }
         whenever(ownershipResolver.getOwnedWorkoutSession(1L, 10L)).thenReturn(s)
-        whenever(sessionExerciseRepository.findByWorkoutSessionIn(listOf(s))).thenReturn(emptyList())
-        whenever(sessionSetRepository.findBySessionExerciseIn(any())).thenReturn(emptyList())
 
-        val result = service.update(1L, WorkoutSessionPatchRequest(notes = "great session"), 10L)
-
-        assertEquals("great session", result.session.notes)
-        assertEquals(SessionStatus.COMPLETED, result.session.status)
+        assertThrows(ConflictException::class.java) {
+            service.update(1L, WorkoutSessionPatchRequest(notes = "great session"), 10L)
+        }
+        assertEquals("original", s.notes)
     }
 
     @Test

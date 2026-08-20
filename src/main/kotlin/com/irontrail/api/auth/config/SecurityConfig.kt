@@ -35,6 +35,7 @@ class SecurityConfig(
             }
             authorizeHttpRequests {
                 authorize("/v1/auth/**", permitAll)
+                authorize("/v1/health", permitAll)
                 authorize(anyRequest, authenticated)
             }
             addFilterBefore<UsernamePasswordAuthenticationFilter>(jwtAuthenticationFilter)
