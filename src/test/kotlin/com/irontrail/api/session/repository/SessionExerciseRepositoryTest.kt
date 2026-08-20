@@ -15,7 +15,6 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 import java.time.OffsetDateTime
 
 class SessionExerciseRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -25,19 +24,23 @@ class SessionExerciseRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun persistSession(ownerId: Long): WorkoutSession = entityManager.persistAndFlush(
-        WorkoutSession(ownerId = ownerId, startedAt = OffsetDateTime.now(), durationSeconds = 0, status = SessionStatus.COMPLETED)
-    )
+    private fun persistSession(ownerId: Long): WorkoutSession =
+        entityManager.persistAndFlush(
+            WorkoutSession(ownerId = ownerId, startedAt = OffsetDateTime.now(), durationSeconds = 0, status = SessionStatus.COMPLETED),
+        )
 
-    private fun persistSessionExercise(session: WorkoutSession, name: String = "Bench Press"): SessionExercise =
+    private fun persistSessionExercise(
+        session: WorkoutSession,
+        name: String = "Bench Press",
+    ): SessionExercise =
         entityManager.persistAndFlush(
             SessionExercise(
                 exerciseNameSnapshot = name,
                 inputTypeSnapshot = ExerciseInputType.REPS,
                 isRepRange = true,
                 restDurationSeconds = 90,
-                sortOrder = 0
-            ).apply { workoutSession = session }
+                sortOrder = 0,
+            ).apply { workoutSession = session },
         )
 
     // ---- findByWorkoutSessionIn ----

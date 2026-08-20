@@ -21,20 +21,21 @@ import org.mockito.kotlin.whenever
 import java.time.OffsetDateTime
 
 class SessionOwnershipResolverTest {
-
     private val workoutSessionRepository: WorkoutSessionRepository = mock()
     private val sessionExerciseRepository: SessionExerciseRepository = mock()
     private val sessionSetRepository: SessionSetRepository = mock()
 
     private val resolver = SessionOwnershipResolver(workoutSessionRepository, sessionExerciseRepository, sessionSetRepository)
 
-    private fun session(id: Long = 1L, ownerId: Long = 10L) =
-        WorkoutSession(
-            ownerId = ownerId,
-            startedAt = OffsetDateTime.now(),
-            durationSeconds = 0,
-            status = SessionStatus.ACTIVE
-        ).apply { sessionId = id }
+    private fun session(
+        id: Long = 1L,
+        ownerId: Long = 10L,
+    ) = WorkoutSession(
+        ownerId = ownerId,
+        startedAt = OffsetDateTime.now(),
+        durationSeconds = 0,
+        status = SessionStatus.ACTIVE,
+    ).apply { sessionId = id }
 
     private fun sessionExercise(id: Long = 1L) =
         SessionExercise(
@@ -42,14 +43,14 @@ class SessionOwnershipResolverTest {
             inputTypeSnapshot = ExerciseInputType.REPS,
             isRepRange = true,
             restDurationSeconds = 90,
-            sortOrder = 0
+            sortOrder = 0,
         ).apply { sessionExerciseId = id }
 
     private fun sessionSet(id: Long = 1L) =
         SessionSet(
             sortOrder = 0,
             setType = SetType.NORMAL,
-            isCompleted = false
+            isCompleted = false,
         ).apply { sessionSetId = id }
 
     // ---- getOwnedWorkoutSession ----
@@ -68,9 +69,10 @@ class SessionOwnershipResolverTest {
     fun `getOwnedWorkoutSession throws NotFoundException naming WorkoutSession and the requested id when not owned or missing`() {
         whenever(workoutSessionRepository.findBySessionIdAndOwnerId(5L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedWorkoutSession(5L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedWorkoutSession(5L, 10L)
+            }
         assertEquals("WorkoutSession not found: 5", ex.message)
     }
 
@@ -99,9 +101,10 @@ class SessionOwnershipResolverTest {
     fun `getOwnedSessionExercise throws NotFoundException naming SessionExercise and the requested id when not owned or missing`() {
         whenever(sessionExerciseRepository.findOwnedBySessionExerciseId(3L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedSessionExercise(3L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedSessionExercise(3L, 10L)
+            }
         assertEquals("SessionExercise not found: 3", ex.message)
     }
 
@@ -121,9 +124,10 @@ class SessionOwnershipResolverTest {
     fun `getOwnedSessionSet throws NotFoundException naming SessionSet and the requested id when not owned or missing`() {
         whenever(sessionSetRepository.findOwnedBySessionSetId(9L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedSessionSet(9L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedSessionSet(9L, 10L)
+            }
         assertEquals("SessionSet not found: 9", ex.message)
     }
 

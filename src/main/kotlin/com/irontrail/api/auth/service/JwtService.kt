@@ -5,15 +5,14 @@ import io.jsonwebtoken.security.Keys
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.*
+import java.util.Date
 import javax.crypto.SecretKey
 
 @Service
 class JwtService(
     @Value($$"${jwt.secret}") secret: String,
-    @Value($$"${jwt.expiration}") private val expiration: Duration
+    @Value($$"${jwt.expiration}") private val expiration: Duration,
 ) {
-
     private val signingKey: SecretKey = Keys.hmacShaKeyFor(secret.toByteArray())
 
     val expiresInSeconds: Long = expiration.toSeconds()
@@ -22,7 +21,8 @@ class JwtService(
         val now = Date()
         val expiry = Date(now.time + expiration.toMillis())
 
-        return Jwts.builder()
+        return Jwts
+            .builder()
             .subject(userId.toString())
             .issuedAt(now)
             .expiration(expiry)
@@ -30,16 +30,17 @@ class JwtService(
             .compact()
     }
 
-    fun extractUserId(token: String): Long? {
-        return try {
-            val claims = Jwts.parser()
-                .verifyWith(signingKey)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+    fun extractUserId(token: String): Long? =
+        try {
+            val claims =
+                Jwts
+                    .parser()
+                    .verifyWith(signingKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .payload
             claims.subject.toLong()
         } catch (e: Exception) {
             null
         }
-    }
 }

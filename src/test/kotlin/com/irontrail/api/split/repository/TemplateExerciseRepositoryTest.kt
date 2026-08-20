@@ -11,13 +11,11 @@ import com.irontrail.api.testsupport.RepositoryTestBase
 import com.irontrail.api.user.model.User
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 
 class TemplateExerciseRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -27,29 +25,34 @@ class TemplateExerciseRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun persistSplit(ownerId: Long): Split =
-        entityManager.persistAndFlush(Split(ownerId = ownerId, name = "PPL"))
+    private fun persistSplit(ownerId: Long): Split = entityManager.persistAndFlush(Split(ownerId = ownerId, name = "PPL"))
 
     private fun persistDay(splitId: Long): WorkoutDay =
         entityManager.persistAndFlush(WorkoutDay(splitId = splitId, name = "Push Day", sortOrder = 0))
 
-    private fun persistExercise(): Long = entityManager.persistAndFlush(
-        Exercise(
-            wgerId = null,
-            name = "Bench Press",
-            primaryMuscleGroup = MuscleGroup.CHEST,
-            secondaryMuscleGroups = emptyList(),
-            equipment = Equipment.BARBELL,
-            inputType = ExerciseInputType.REPS,
-            description = null,
-            imageUrl = null,
-            ownerId = null
-        )
-    ).exerciseId
+    private fun persistExercise(): Long =
+        entityManager
+            .persistAndFlush(
+                Exercise(
+                    wgerId = null,
+                    name = "Bench Press",
+                    primaryMuscleGroup = MuscleGroup.CHEST,
+                    secondaryMuscleGroups = emptyList(),
+                    equipment = Equipment.BARBELL,
+                    inputType = ExerciseInputType.REPS,
+                    description = null,
+                    imageUrl = null,
+                    ownerId = null,
+                ),
+            ).exerciseId
 
-    private fun persistTemplateExercise(workoutDayId: Long, exerciseId: Long = persistExercise(), sortOrder: Int = 0): TemplateExercise =
+    private fun persistTemplateExercise(
+        workoutDayId: Long,
+        exerciseId: Long = persistExercise(),
+        sortOrder: Int = 0,
+    ): TemplateExercise =
         entityManager.persistAndFlush(
-            TemplateExercise(workoutDayId = workoutDayId, exerciseId = exerciseId, sortOrder = sortOrder)
+            TemplateExercise(workoutDayId = workoutDayId, exerciseId = exerciseId, sortOrder = sortOrder),
         )
 
     // ---- findByWorkoutDayIdIn ----
@@ -124,7 +127,7 @@ class TemplateExerciseRepositoryTest : RepositoryTestBase() {
     }
 
     @Test
-    fun `findOwnedByTemplateExerciseId doesn't leak an exercise under one user's day when queried with another user's id who owns a different day`() {
+    fun `findOwnedByTemplateExerciseId returns null for another owner's day`() {
         // Two different owners, each with their own split/day/exercise - proves the join genuinely
         // filters on ownership rather than just matching on any split row existing.
         val ownerA = persistUser()

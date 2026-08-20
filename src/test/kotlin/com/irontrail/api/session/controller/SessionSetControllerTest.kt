@@ -25,7 +25,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class SessionSetControllerTest {
-
     private val workoutSessionService: WorkoutSessionService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(SessionSetController(workoutSessionService)).build()
 
@@ -41,15 +40,15 @@ class SessionSetControllerTest {
     fun `PATCH logs a completed set and returns 200`() {
         val request = SessionSetPatchRequest(reps = 8, weightKg = 60.0, isCompleted = true)
         whenever(workoutSessionService.updateSessionSet(eq(1L), eq(request), eq(10L))).thenReturn(
-            SessionSetResponse(1L, 0, SetType.NORMAL, 8, null, null, 8, 60.0, null, true)
+            SessionSetResponse(1L, 0, SetType.NORMAL, 8, null, null, 8, 60.0, null, true),
         )
 
-        mockMvc.perform(
-            patch("/v1/session-sets/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"reps":8,"weightKg":60.0,"isCompleted":true}""")
-        )
-            .andExpect(status().isOk)
+        mockMvc
+            .perform(
+                patch("/v1/session-sets/1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"reps":8,"weightKg":60.0,"isCompleted":true}"""),
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.isCompleted").value(true))
     }
 
@@ -57,7 +56,8 @@ class SessionSetControllerTest {
     fun `PATCH returns 404 when not owned by the caller`() {
         whenever(workoutSessionService.updateSessionSet(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("SessionSet", 1L))
 
-        mockMvc.perform(patch("/v1/session-sets/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/session-sets/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 

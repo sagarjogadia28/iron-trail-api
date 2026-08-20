@@ -17,19 +17,15 @@ import jakarta.persistence.Table
 class TemplateSet(
     @Column(name = "sort_order")
     var sortOrder: Int,
-
     @Column(name = "target_reps")
     var targetReps: Int? = null,
-
     @Column(name = "target_reps_max")
     var targetRepsMax: Int? = null,
-
     @Column(name = "target_duration_seconds")
     var targetDurationSeconds: Int? = null,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "set_type")
-    var setType: SetType
+    var setType: SetType,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,6 +44,5 @@ class TemplateSet(
 
     override fun hashCode(): Int = javaClass.hashCode()
 
-    override fun toString(): String =
-        "TemplateSet(templateSetId=$templateSetId, sortOrder=$sortOrder, setType=$setType)"
+    override fun toString(): String = "TemplateSet(templateSetId=$templateSetId, sortOrder=$sortOrder, setType=$setType)"
 }

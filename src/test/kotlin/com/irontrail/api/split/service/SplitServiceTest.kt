@@ -21,7 +21,6 @@ import com.irontrail.api.split.repository.TemplateExerciseRepository
 import com.irontrail.api.split.repository.TemplateSetRepository
 import com.irontrail.api.split.repository.WorkoutDayRepository
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -33,7 +32,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class SplitServiceTest {
-
     private val splitRepository: SplitRepository = mock()
     private val workoutDayRepository: WorkoutDayRepository = mock()
     private val templateExerciseRepository: TemplateExerciseRepository = mock()
@@ -41,22 +39,30 @@ class SplitServiceTest {
     private val exerciseRepository: ExerciseRepository = mock()
     private val ownershipResolver: SplitOwnershipResolver = mock()
 
-    private val service = SplitService(
-        splitRepository,
-        workoutDayRepository,
-        templateExerciseRepository,
-        templateSetRepository,
-        exerciseRepository,
-        ownershipResolver
-    )
+    private val service =
+        SplitService(
+            splitRepository,
+            workoutDayRepository,
+            templateExerciseRepository,
+            templateSetRepository,
+            exerciseRepository,
+            ownershipResolver,
+        )
 
     // ---- fixtures ----
 
-    private fun split(id: Long = 1L, ownerId: Long = 10L, name: String = "Push Pull Legs") =
-        Split(ownerId = ownerId, name = name).apply { splitId = id }
+    private fun split(
+        id: Long = 1L,
+        ownerId: Long = 10L,
+        name: String = "Push Pull Legs",
+    ) = Split(ownerId = ownerId, name = name).apply { splitId = id }
 
-    private fun workoutDay(id: Long = 1L, splitId: Long = 1L, name: String = "Push Day", sortOrder: Int = 0) =
-        WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
+    private fun workoutDay(
+        id: Long = 1L,
+        splitId: Long = 1L,
+        name: String = "Push Day",
+        sortOrder: Int = 0,
+    ) = WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
 
     private fun templateExercise(
         id: Long = 1L,
@@ -65,14 +71,14 @@ class SplitServiceTest {
         sortOrder: Int = 0,
         restDurationSeconds: Int = 90,
         isRepRange: Boolean = true,
-        notes: String? = null
+        notes: String? = null,
     ) = TemplateExercise(
         workoutDayId = workoutDayId,
         exerciseId = exerciseId,
         sortOrder = sortOrder,
         restDurationSeconds = restDurationSeconds,
         isRepRange = isRepRange,
-        notes = notes
+        notes = notes,
     ).apply { templateExerciseId = id }
 
     private fun templateSet(
@@ -82,13 +88,13 @@ class SplitServiceTest {
         targetReps: Int? = 8,
         targetRepsMax: Int? = null,
         targetDurationSeconds: Int? = null,
-        setType: SetType = SetType.NORMAL
+        setType: SetType = SetType.NORMAL,
     ) = TemplateSet(
         sortOrder = sortOrder,
         targetReps = targetReps,
         targetRepsMax = targetRepsMax,
         targetDurationSeconds = targetDurationSeconds,
-        setType = setType
+        setType = setType,
     ).apply {
         templateSetId = id
         templateExercise = parent
@@ -193,7 +199,10 @@ class SplitServiceTest {
         assertEquals(listOf(100L, 101L), result.workoutDays[0].templateExercises.map { it.templateExerciseId })
         assertEquals(
             listOf(1000L, 1001L),
-            result.workoutDays[0].templateExercises[0].templateSets.map { it.templateSetId }
+            result.workoutDays[0]
+                .templateExercises[0]
+                .templateSets
+                .map { it.templateSetId },
         )
     }
 
@@ -618,9 +627,10 @@ class SplitServiceTest {
         whenever(ownershipResolver.getOwnedWorkoutDay(1L, 10L)).thenReturn(workoutDay(id = 1L))
         whenever(exerciseRepository.existsVisibleById(500L, 10L)).thenReturn(false)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            service.createTemplateExercise(1L, TemplateExerciseRequest(exerciseId = 500L, sortOrder = 0), 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                service.createTemplateExercise(1L, TemplateExerciseRequest(exerciseId = 500L, sortOrder = 0), 10L)
+            }
         assertEquals("Exercise not found: 500", ex.message)
         verify(templateExerciseRepository, never()).save(any())
     }
@@ -633,11 +643,18 @@ class SplitServiceTest {
         whenever(templateExerciseRepository.save(captor.capture()))
             .thenAnswer { (it.arguments[0] as TemplateExercise).apply { templateExerciseId = 100L } }
 
-        val result = service.createTemplateExercise(
-            1L,
-            TemplateExerciseRequest(exerciseId = 500L, sortOrder = 2, restDurationSeconds = 60, isRepRange = false, notes = "slow eccentric"),
-            10L
-        )
+        val result =
+            service.createTemplateExercise(
+                1L,
+                TemplateExerciseRequest(
+                    exerciseId = 500L,
+                    sortOrder = 2,
+                    restDurationSeconds = 60,
+                    isRepRange = false,
+                    notes = "slow eccentric",
+                ),
+                10L,
+            )
 
         assertEquals(1L, captor.firstValue.workoutDayId)
         assertEquals(500L, captor.firstValue.exerciseId)
@@ -745,7 +762,7 @@ class SplitServiceTest {
         service.createTemplateSet(
             1L,
             TemplateSetRequest(sortOrder = 3, targetReps = 6, targetRepsMax = 10, targetDurationSeconds = null, setType = SetType.DROP_SET),
-            10L
+            10L,
         )
 
         assertEquals(3, captor.firstValue.sortOrder)
@@ -762,7 +779,7 @@ class SplitServiceTest {
         service.createTemplateSet(
             1L,
             TemplateSetRequest(sortOrder = 0, targetReps = 8, targetRepsMax = 8, setType = SetType.NORMAL),
-            10L
+            10L,
         )
 
         verify(templateSetRepository).save(any())
@@ -772,13 +789,14 @@ class SplitServiceTest {
     fun `createTemplateSet rejects targetReps greater than targetRepsMax and never saves`() {
         whenever(ownershipResolver.getOwnedTemplateExercise(1L, 10L)).thenReturn(templateExercise(id = 1L))
 
-        val ex = assertThrows(BadRequestException::class.java) {
-            service.createTemplateSet(
-                1L,
-                TemplateSetRequest(sortOrder = 0, targetReps = 12, targetRepsMax = 8, setType = SetType.NORMAL),
-                10L
-            )
-        }
+        val ex =
+            assertThrows(BadRequestException::class.java) {
+                service.createTemplateSet(
+                    1L,
+                    TemplateSetRequest(sortOrder = 0, targetReps = 12, targetRepsMax = 8, setType = SetType.NORMAL),
+                    10L,
+                )
+            }
         assertEquals("targetReps must not exceed targetRepsMax", ex.message)
         verify(templateSetRepository, never()).save(any())
     }
@@ -791,7 +809,7 @@ class SplitServiceTest {
         service.createTemplateSet(
             1L,
             TemplateSetRequest(sortOrder = 0, targetReps = 8, targetRepsMax = null, setType = SetType.NORMAL),
-            10L
+            10L,
         )
 
         verify(templateSetRepository).save(any())
@@ -827,9 +845,10 @@ class SplitServiceTest {
         val ts = templateSet(parent = te, targetReps = 5, targetRepsMax = 10)
         whenever(ownershipResolver.getOwnedTemplateSet(1L, 10L)).thenReturn(ts)
 
-        val ex = assertThrows(BadRequestException::class.java) {
-            service.updateTemplateSet(1L, TemplateSetPatchRequest(targetReps = 15), 10L)
-        }
+        val ex =
+            assertThrows(BadRequestException::class.java) {
+                service.updateTemplateSet(1L, TemplateSetPatchRequest(targetReps = 15), 10L)
+            }
         assertEquals("targetReps must not exceed targetRepsMax", ex.message)
     }
 
@@ -839,9 +858,10 @@ class SplitServiceTest {
         val ts = templateSet(parent = te, targetReps = 10, targetRepsMax = 12)
         whenever(ownershipResolver.getOwnedTemplateSet(1L, 10L)).thenReturn(ts)
 
-        val ex = assertThrows(BadRequestException::class.java) {
-            service.updateTemplateSet(1L, TemplateSetPatchRequest(targetRepsMax = 5), 10L)
-        }
+        val ex =
+            assertThrows(BadRequestException::class.java) {
+                service.updateTemplateSet(1L, TemplateSetPatchRequest(targetRepsMax = 5), 10L)
+            }
         assertEquals("targetReps must not exceed targetRepsMax", ex.message)
     }
 
@@ -851,11 +871,12 @@ class SplitServiceTest {
         val ts = templateSet(parent = te, targetReps = 20, targetRepsMax = 25)
         whenever(ownershipResolver.getOwnedTemplateSet(1L, 10L)).thenReturn(ts)
 
-        val result = service.updateTemplateSet(
-            1L,
-            TemplateSetPatchRequest(targetReps = 5, targetRepsMax = 8),
-            10L
-        )
+        val result =
+            service.updateTemplateSet(
+                1L,
+                TemplateSetPatchRequest(targetReps = 5, targetRepsMax = 8),
+                10L,
+            )
 
         assertEquals(5, result.targetReps)
         assertEquals(8, result.targetRepsMax)

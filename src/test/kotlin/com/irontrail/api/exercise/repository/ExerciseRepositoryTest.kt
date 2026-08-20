@@ -18,7 +18,6 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 // test (or an H2-backed test) would never surface - see ExerciseService's search/filter history in
 // CLAUDE.md. This suite runs against a real Postgres container specifically to catch that class of bug.
 class ExerciseRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -34,20 +33,21 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         secondary: List<MuscleGroup> = emptyList(),
         ownerId: Long? = null,
         equipment: Equipment = Equipment.BARBELL,
-        inputType: ExerciseInputType = ExerciseInputType.REPS
-    ): Exercise = entityManager.persistAndFlush(
-        Exercise(
-            wgerId = null,
-            name = name,
-            primaryMuscleGroup = primary,
-            secondaryMuscleGroups = secondary,
-            equipment = equipment,
-            inputType = inputType,
-            description = null,
-            imageUrl = null,
-            ownerId = ownerId
+        inputType: ExerciseInputType = ExerciseInputType.REPS,
+    ): Exercise =
+        entityManager.persistAndFlush(
+            Exercise(
+                wgerId = null,
+                name = name,
+                primaryMuscleGroup = primary,
+                secondaryMuscleGroups = secondary,
+                equipment = equipment,
+                inputType = inputType,
+                description = null,
+                imageUrl = null,
+                ownerId = ownerId,
+            ),
         )
-    )
 
     // ---- findVisibleBySearchAndMuscleGroups: visibility ----
 
@@ -147,9 +147,13 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         persistExercise(name = "Squat", primary = MuscleGroup.QUADS)
         val caller = persistUser()
 
-        val result = exerciseRepository.findVisibleBySearchAndMuscleGroups(
-            "", true, listOf(MuscleGroup.QUADS), caller
-        )
+        val result =
+            exerciseRepository.findVisibleBySearchAndMuscleGroups(
+                "",
+                true,
+                listOf(MuscleGroup.QUADS),
+                caller,
+            )
 
         assertTrue(result.any { it.name == "Squat" })
     }
@@ -159,9 +163,13 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         persistExercise(name = "Bench Press", primary = MuscleGroup.CHEST, secondary = listOf(MuscleGroup.TRICEPS))
         val caller = persistUser()
 
-        val result = exerciseRepository.findVisibleBySearchAndMuscleGroups(
-            "", true, listOf(MuscleGroup.TRICEPS), caller
-        )
+        val result =
+            exerciseRepository.findVisibleBySearchAndMuscleGroups(
+                "",
+                true,
+                listOf(MuscleGroup.TRICEPS),
+                caller,
+            )
 
         assertTrue(result.any { it.name == "Bench Press" })
     }
@@ -171,9 +179,13 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         persistExercise(name = "Bicep Curl", primary = MuscleGroup.BICEPS, secondary = listOf(MuscleGroup.FOREARMS))
         val caller = persistUser()
 
-        val result = exerciseRepository.findVisibleBySearchAndMuscleGroups(
-            "", true, listOf(MuscleGroup.QUADS), caller
-        )
+        val result =
+            exerciseRepository.findVisibleBySearchAndMuscleGroups(
+                "",
+                true,
+                listOf(MuscleGroup.QUADS),
+                caller,
+            )
 
         assertTrue(result.none { it.name == "Bicep Curl" })
     }
@@ -183,9 +195,13 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         persistExercise(name = "Plank", primary = MuscleGroup.CORE)
         val caller = persistUser()
 
-        val result = exerciseRepository.findVisibleBySearchAndMuscleGroups(
-            "", true, listOf(MuscleGroup.CORE, MuscleGroup.GLUTES), caller
-        )
+        val result =
+            exerciseRepository.findVisibleBySearchAndMuscleGroups(
+                "",
+                true,
+                listOf(MuscleGroup.CORE, MuscleGroup.GLUTES),
+                caller,
+            )
 
         assertTrue(result.any { it.name == "Plank" })
     }
@@ -196,9 +212,13 @@ class ExerciseRepositoryTest : RepositoryTestBase() {
         persistExercise(name = "Squat", primary = MuscleGroup.QUADS)
         val caller = persistUser()
 
-        val result = exerciseRepository.findVisibleBySearchAndMuscleGroups(
-            "bench", true, listOf(MuscleGroup.QUADS), caller
-        )
+        val result =
+            exerciseRepository.findVisibleBySearchAndMuscleGroups(
+                "bench",
+                true,
+                listOf(MuscleGroup.QUADS),
+                caller,
+            )
 
         assertTrue(result.isEmpty())
     }

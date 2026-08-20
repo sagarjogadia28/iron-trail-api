@@ -7,7 +7,7 @@ import java.time.OffsetDateTime
 
 data class WorkoutSessionRequest(
     val workoutDayId: Long? = null,
-    val notes: String? = null
+    val notes: String? = null,
 )
 
 data class WorkoutSessionPatchRequest(
@@ -16,7 +16,7 @@ data class WorkoutSessionPatchRequest(
     val totalVolumeKg: Double? = null,
     val completedSets: Int? = null,
     val totalSets: Int? = null,
-    val notes: String? = null
+    val notes: String? = null,
 )
 
 data class WorkoutSessionResponse(
@@ -30,24 +30,25 @@ data class WorkoutSessionResponse(
     val completedSets: Int?,
     val totalSets: Int?,
     val notes: String?,
-    val status: SessionStatus
+    val status: SessionStatus,
 )
 
 data class WorkoutSessionDetailResponse(
     @get:JsonUnwrapped val session: WorkoutSessionResponse,
-    val sessionExercises: List<SessionExerciseResponse>
+    val sessionExercises: List<SessionExerciseResponse>,
 )
 
-fun WorkoutSession.toWorkoutSessionResponse() = WorkoutSessionResponse(
-    sessionId = sessionId,
-    workoutDayId = workoutDayId,
-    splitNameSnapshot = splitNameSnapshot,
-    workoutDayNameSnapshot = workoutDayNameSnapshot,
-    startedAt = startedAt,
-    durationSeconds = durationSeconds,
-    totalVolumeKg = totalVolumeKg,
-    completedSets = completedSets,
-    totalSets = totalSets,
-    notes = notes,
-    status = status
-)
+fun WorkoutSession.toWorkoutSessionResponse() =
+    WorkoutSessionResponse(
+        sessionId = sessionId,
+        workoutDayId = workoutDayId,
+        splitNameSnapshot = splitNameSnapshot,
+        workoutDayNameSnapshot = workoutDayNameSnapshot,
+        startedAt = startedAt,
+        durationSeconds = durationSeconds,
+        totalVolumeKg = totalVolumeKg,
+        completedSets = completedSets,
+        totalSets = totalSets,
+        notes = notes,
+        status = status,
+    )

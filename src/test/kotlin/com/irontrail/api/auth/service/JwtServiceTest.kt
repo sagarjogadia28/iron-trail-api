@@ -10,11 +10,9 @@ import java.time.Duration
 import java.util.Date
 
 class JwtServiceTest {
-
     private val secret = "a-test-secret-that-is-long-enough-for-hs384-signing-1234567890"
 
-    private fun service(expiration: Duration = Duration.ofDays(1)) =
-        JwtService(secret, expiration)
+    private fun service(expiration: Duration = Duration.ofDays(1)) = JwtService(secret, expiration)
 
     @Test
     fun `generateToken then extractUserId round-trips the same id`() {
@@ -84,12 +82,14 @@ class JwtServiceTest {
         val jwtService = service()
         val signingKey = Keys.hmacShaKeyFor(secret.toByteArray())
         val now = Date()
-        val forged = Jwts.builder()
-            .subject("not-a-number")
-            .issuedAt(now)
-            .expiration(Date(now.time + 60_000))
-            .signWith(signingKey)
-            .compact()
+        val forged =
+            Jwts
+                .builder()
+                .subject("not-a-number")
+                .issuedAt(now)
+                .expiration(Date(now.time + 60_000))
+                .signWith(signingKey)
+                .compact()
 
         assertNull(jwtService.extractUserId(forged))
     }

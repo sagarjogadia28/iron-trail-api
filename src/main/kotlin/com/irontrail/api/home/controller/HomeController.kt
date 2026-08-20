@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/home")
 class HomeController(
-    private val homeService: HomeService
+    private val homeService: HomeService,
 ) {
     @GetMapping
-    fun getHome(@AuthenticationPrincipal userId: Long): HomeResponse = homeService.getHome(userId)
+    fun getHome(
+        @AuthenticationPrincipal userId: Long,
+    ): HomeResponse = homeService.getHome(userId)
 }

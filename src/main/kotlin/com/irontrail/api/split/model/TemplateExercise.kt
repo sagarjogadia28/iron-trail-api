@@ -14,20 +14,15 @@ import jakarta.persistence.Table
 class TemplateExercise(
     @Column(name = "workout_day_id")
     var workoutDayId: Long,
-
     @Column(name = "exercise_id")
     var exerciseId: Long,
-
     @Column(name = "sort_order")
     var sortOrder: Int,
-
     @Column(name = "rest_duration_seconds")
     var restDurationSeconds: Int = 90,
-
     @Column(name = "is_rep_range")
     var isRepRange: Boolean = true,
-
-    var notes: String? = null
+    var notes: String? = null,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

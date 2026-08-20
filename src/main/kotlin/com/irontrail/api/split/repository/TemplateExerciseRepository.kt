@@ -13,10 +13,10 @@ interface TemplateExerciseRepository : JpaRepository<TemplateExercise, Long> {
             SELECT te FROM TemplateExercise te, WorkoutDay wd, Split s 
             WHERE te.templateExerciseId = :templateExerciseId AND te.workoutDayId = wd.workoutDayId AND 
             wd.splitId = s.splitId AND s.ownerId = :ownerId
-        """
+        """,
     )
     fun findOwnedByTemplateExerciseId(
         @Param("templateExerciseId") templateExerciseId: Long,
-        @Param("ownerId") ownerId: Long
+        @Param("ownerId") ownerId: Long,
     ): TemplateExercise?
 }

@@ -7,14 +7,14 @@ data class SessionExerciseRequest(
     val isRepRange: Boolean,
     val restDurationSeconds: Int,
     val sortOrder: Int,
-    val notes: String? = null
+    val notes: String? = null,
 )
 
 data class SessionExercisePatchRequest(
     val sortOrder: Int? = null,
     val restDurationSeconds: Int? = null,
     val isRepRange: Boolean? = null,
-    val notes: String? = null
+    val notes: String? = null,
 )
 
 data class SessionExerciseResponse(
@@ -26,5 +26,5 @@ data class SessionExerciseResponse(
     val restDurationSeconds: Int,
     val sortOrder: Int,
     val notes: String?,
-    val sets: List<SessionSetResponse>
+    val sets: List<SessionSetResponse>,
 )

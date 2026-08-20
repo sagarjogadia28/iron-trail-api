@@ -11,5 +11,5 @@ enum class MuscleGroup {
     GLUTES,
     QUADS,
     HAMSTRINGS,
-    CALVES
+    CALVES,
 }

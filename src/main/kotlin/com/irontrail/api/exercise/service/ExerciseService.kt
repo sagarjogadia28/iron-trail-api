@@ -13,39 +13,55 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 @Transactional
 class ExerciseService(
-    private val exerciseRepository: ExerciseRepository
+    private val exerciseRepository: ExerciseRepository,
 ) {
-
-    fun findAll(search: String?, muscleGroups: List<MuscleGroup>?, userId: Long): List<ExerciseResponse> {
+    fun findAll(
+        search: String?,
+        muscleGroups: List<MuscleGroup>?,
+        userId: Long,
+    ): List<ExerciseResponse> {
         val groups = muscleGroups ?: emptyList()
-        val escapedSearch = (search ?: "")
-            .replace("\\", "\\\\")
-            .replace("%", "\\%")
-            .replace("_", "\\_")
-        return exerciseRepository.findVisibleBySearchAndMuscleGroups(escapedSearch, groups.isNotEmpty(), groups, userId)
+        val escapedSearch =
+            (search ?: "")
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_")
+        return exerciseRepository
+            .findVisibleBySearchAndMuscleGroups(escapedSearch, groups.isNotEmpty(), groups, userId)
             .map { it.toResponse() }
     }
 
-    fun findById(id: Long, userId: Long): ExerciseResponse =
+    fun findById(
+        id: Long,
+        userId: Long,
+    ): ExerciseResponse =
         exerciseRepository.findVisibleById(id, userId)?.toResponse()
             ?: throw NotFoundException("Exercise", id)
 
-    fun create(request: ExerciseRequest, userId: Long): ExerciseResponse {
-        val exercise = Exercise(
-            wgerId = null,
-            name = request.name,
-            primaryMuscleGroup = request.primaryMuscleGroup,
-            secondaryMuscleGroups = request.secondaryMuscleGroups,
-            equipment = request.equipment,
-            inputType = request.inputType,
-            description = request.description,
-            imageUrl = null,
-            ownerId = userId
-        )
+    fun create(
+        request: ExerciseRequest,
+        userId: Long,
+    ): ExerciseResponse {
+        val exercise =
+            Exercise(
+                wgerId = null,
+                name = request.name,
+                primaryMuscleGroup = request.primaryMuscleGroup,
+                secondaryMuscleGroups = request.secondaryMuscleGroups,
+                equipment = request.equipment,
+                inputType = request.inputType,
+                description = request.description,
+                imageUrl = null,
+                ownerId = userId,
+            )
         return exerciseRepository.save(exercise).toResponse()
     }
 
-    fun update(id: Long, request: ExercisePatchRequest, userId: Long): ExerciseResponse {
+    fun update(
+        id: Long,
+        request: ExercisePatchRequest,
+        userId: Long,
+    ): ExerciseResponse {
         val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw NotFoundException("Exercise", id)
         request.name?.let { existing.name = it }
         request.primaryMuscleGroup?.let { existing.primaryMuscleGroup = it }
@@ -56,21 +72,25 @@ class ExerciseService(
         return existing.toResponse()
     }
 
-    fun delete(id: Long, userId: Long) {
+    fun delete(
+        id: Long,
+        userId: Long,
+    ) {
         val existing = exerciseRepository.findByExerciseIdAndOwnerId(id, userId) ?: throw NotFoundException("Exercise", id)
         exerciseRepository.delete(existing)
     }
 
-    private fun Exercise.toResponse() = ExerciseResponse(
-        exerciseId = exerciseId,
-        wgerId = wgerId,
-        name = name,
-        primaryMuscleGroup = primaryMuscleGroup,
-        secondaryMuscleGroups = secondaryMuscleGroups,
-        equipment = equipment,
-        inputType = inputType,
-        description = description,
-        imageUrl = imageUrl,
-        ownerId = ownerId
-    )
+    private fun Exercise.toResponse() =
+        ExerciseResponse(
+            exerciseId = exerciseId,
+            wgerId = wgerId,
+            name = name,
+            primaryMuscleGroup = primaryMuscleGroup,
+            secondaryMuscleGroups = secondaryMuscleGroups,
+            equipment = equipment,
+            inputType = inputType,
+            description = description,
+            imageUrl = imageUrl,
+            ownerId = ownerId,
+        )
 }

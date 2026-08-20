@@ -35,39 +35,56 @@ import java.time.OffsetDateTime
 import java.util.Optional
 
 class HomeServiceTest {
-
     private val userProfileRepository: UserProfileRepository = mock()
     private val splitRepository: SplitRepository = mock()
     private val workoutDayRepository: WorkoutDayRepository = mock()
     private val templateExerciseRepository: TemplateExerciseRepository = mock()
     private val workoutSessionRepository: WorkoutSessionRepository = mock()
 
-    private val homeService = HomeService(
-        userProfileRepository, splitRepository, workoutDayRepository, templateExerciseRepository, workoutSessionRepository
-    )
+    private val homeService =
+        HomeService(
+            userProfileRepository,
+            splitRepository,
+            workoutDayRepository,
+            templateExerciseRepository,
+            workoutSessionRepository,
+        )
 
     private val userId = 1L
 
     // ---- test data builders ----
 
-    private fun profile(id: Long = userId, activeSplitId: Long? = null): UserProfile = UserProfile(
-        name = "Test User",
-        gender = Gender.PREFER_NOT_TO_SAY,
-        weightUnit = WeightUnit.KG,
-        measurementUnit = MeasurementUnit.METRIC,
-        restTimerNotificationsEnabled = true,
-        profileImagePath = null,
-        activeSplitId = activeSplitId
-    ).apply { this.userId = id }
+    private fun profile(
+        id: Long = userId,
+        activeSplitId: Long? = null,
+    ): UserProfile =
+        UserProfile(
+            name = "Test User",
+            gender = Gender.PREFER_NOT_TO_SAY,
+            weightUnit = WeightUnit.KG,
+            measurementUnit = MeasurementUnit.METRIC,
+            restTimerNotificationsEnabled = true,
+            profileImagePath = null,
+            activeSplitId = activeSplitId,
+        ).apply { this.userId = id }
 
-    private fun split(id: Long = 10L, ownerId: Long = userId, name: String = "Push Pull Legs"): Split =
-        Split(ownerId = ownerId, name = name).apply { splitId = id }
+    private fun split(
+        id: Long = 10L,
+        ownerId: Long = userId,
+        name: String = "Push Pull Legs",
+    ): Split = Split(ownerId = ownerId, name = name).apply { splitId = id }
 
-    private fun workoutDay(id: Long, splitId: Long = 10L, name: String, sortOrder: Int): WorkoutDay =
-        WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
+    private fun workoutDay(
+        id: Long,
+        splitId: Long = 10L,
+        name: String,
+        sortOrder: Int,
+    ): WorkoutDay = WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
 
-    private fun templateExercise(id: Long, workoutDayId: Long): TemplateExercise =
-        TemplateExercise(workoutDayId = workoutDayId, exerciseId = 1L, sortOrder = 0).apply { templateExerciseId = id }
+    private fun templateExercise(
+        id: Long,
+        workoutDayId: Long,
+    ): TemplateExercise = TemplateExercise(workoutDayId = workoutDayId, exerciseId = 1L, sortOrder = 0).apply { templateExerciseId = id }
 
     private fun session(
         id: Long = 1L,
@@ -76,24 +93,23 @@ class HomeServiceTest {
         startedAt: OffsetDateTime,
         status: SessionStatus = SessionStatus.COMPLETED,
         splitNameSnapshot: String? = null,
-        workoutDayNameSnapshot: String? = null
-    ): WorkoutSession = WorkoutSession(
-        ownerId = ownerId,
-        workoutDayId = workoutDayId,
-        splitNameSnapshot = splitNameSnapshot,
-        workoutDayNameSnapshot = workoutDayNameSnapshot,
-        startedAt = startedAt,
-        durationSeconds = 1_800L,
-        status = status
-    ).apply { sessionId = id }
+        workoutDayNameSnapshot: String? = null,
+    ): WorkoutSession =
+        WorkoutSession(
+            ownerId = ownerId,
+            workoutDayId = workoutDayId,
+            splitNameSnapshot = splitNameSnapshot,
+            workoutDayNameSnapshot = workoutDayNameSnapshot,
+            startedAt = startedAt,
+            durationSeconds = 1_800L,
+            status = status,
+        ).apply { sessionId = id }
 
     // ---- stub helpers ----
 
-    private fun stubEmptyProfile() =
-        whenever(userProfileRepository.findById(userId)).thenReturn(Optional.empty())
+    private fun stubEmptyProfile() = whenever(userProfileRepository.findById(userId)).thenReturn(Optional.empty())
 
-    private fun stubProfile(profile: UserProfile) =
-        whenever(userProfileRepository.findById(userId)).thenReturn(Optional.of(profile))
+    private fun stubProfile(profile: UserProfile) = whenever(userProfileRepository.findById(userId)).thenReturn(Optional.of(profile))
 
     /** Stubs both "history" queries (month/streak window + recent-3) to look like a user with zero completed sessions. */
     private fun stubEmptyHistory() {
@@ -105,8 +121,10 @@ class HomeServiceTest {
 
     private fun currentWeekMonday(): LocalDate = LocalDate.now().with(DayOfWeek.MONDAY)
 
-    private fun dateTimeInWeek(monday: LocalDate, daysAfterMonday: Long = 0): OffsetDateTime =
-        monday.plusDays(daysAfterMonday).atTime(9, 0).atOffset(OffsetDateTime.now().offset)
+    private fun dateTimeInWeek(
+        monday: LocalDate,
+        daysAfterMonday: Long = 0,
+    ): OffsetDateTime = monday.plusDays(daysAfterMonday).atTime(9, 0).atOffset(OffsetDateTime.now().offset)
 
     // ---- empty overall state ----
 
@@ -183,16 +201,19 @@ class HomeServiceTest {
         stubProfile(profile(activeSplitId = 10L))
         whenever(splitRepository.findById(10L)).thenReturn(Optional.of(split(name = "Push Pull Legs")))
         // Deliberately out of sortOrder to prove the service sorts them itself, not the repository.
-        val days = listOf(
-            workoutDay(id = 3, name = "Legs", sortOrder = 2),
-            workoutDay(id = 1, name = "Push", sortOrder = 0),
-            workoutDay(id = 2, name = "Pull", sortOrder = 1)
-        )
+        val days =
+            listOf(
+                workoutDay(id = 3, name = "Legs", sortOrder = 2),
+                workoutDay(id = 1, name = "Push", sortOrder = 0),
+                workoutDay(id = 2, name = "Pull", sortOrder = 1),
+            )
         whenever(workoutDayRepository.findBySplitIdIn(listOf(10L))).thenReturn(days)
         whenever(
             workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-                eq(userId), any(), eq(SessionStatus.COMPLETED)
-            )
+                eq(userId),
+                any(),
+                eq(SessionStatus.COMPLETED),
+            ),
         ).thenReturn(null)
         whenever(templateExerciseRepository.findByWorkoutDayIdIn(listOf(1L)))
             .thenReturn(listOf(templateExercise(100, 1)))
@@ -217,8 +238,10 @@ class HomeServiceTest {
         whenever(workoutDayRepository.findBySplitIdIn(listOf(10L))).thenReturn(listOf(push, pull, legs))
         whenever(
             workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-                eq(userId), any(), eq(SessionStatus.COMPLETED)
-            )
+                eq(userId),
+                any(),
+                eq(SessionStatus.COMPLETED),
+            ),
         ).thenReturn(session(id = 50, workoutDayId = 1L, startedAt = OffsetDateTime.now().minusDays(1)))
         whenever(templateExerciseRepository.findByWorkoutDayIdIn(listOf(2L))).thenReturn(emptyList())
         stubEmptyHistory()
@@ -240,8 +263,10 @@ class HomeServiceTest {
         // Most recently completed day is the LAST day (highest sortOrder) in the split.
         whenever(
             workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-                eq(userId), any(), eq(SessionStatus.COMPLETED)
-            )
+                eq(userId),
+                any(),
+                eq(SessionStatus.COMPLETED),
+            ),
         ).thenReturn(session(id = 51, workoutDayId = 3L, startedAt = OffsetDateTime.now().minusDays(1)))
         whenever(templateExerciseRepository.findByWorkoutDayIdIn(listOf(1L))).thenReturn(emptyList())
         stubEmptyHistory()
@@ -263,8 +288,10 @@ class HomeServiceTest {
         // (e.g. the day was deleted after the session was logged).
         whenever(
             workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-                eq(userId), any(), eq(SessionStatus.COMPLETED)
-            )
+                eq(userId),
+                any(),
+                eq(SessionStatus.COMPLETED),
+            ),
         ).thenReturn(session(id = 52, workoutDayId = 999L, startedAt = OffsetDateTime.now().minusDays(1)))
         whenever(templateExerciseRepository.findByWorkoutDayIdIn(listOf(1L))).thenReturn(emptyList())
         stubEmptyHistory()
@@ -281,10 +308,11 @@ class HomeServiceTest {
     fun `getHome counts every completed session toward workoutsThisMonth but dedupes trainedDatesThisMonth by calendar day`() {
         stubEmptyProfile()
         val day = OffsetDateTime.now().withDayOfMonth(1).plusDays(4) // the 5th of the current month, always a valid date
-        val sessions = listOf(
-            session(id = 1, startedAt = day.withHour(8)),
-            session(id = 2, startedAt = day.withHour(18))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = day.withHour(8)),
+                session(id = 2, startedAt = day.withHour(18)),
+            )
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(sessions)
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
@@ -313,14 +341,21 @@ class HomeServiceTest {
 
         assertEquals(
             listOf(early.startedAt.toLocalDate(), mid.startedAt.toLocalDate(), late.startedAt.toLocalDate()),
-            response.trainedDatesThisMonth
+            response.trainedDatesThisMonth,
         )
     }
 
     @Test
     fun `getHome queries month sessions from the first instant of the current month and streak sessions from two years back`() {
         stubEmptyProfile()
-        val expectedStartOfMonth = OffsetDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
+        val expectedStartOfMonth =
+            OffsetDateTime
+                .now()
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
         val expectedStreakLowerBound = OffsetDateTime.now().minusYears(2)
         val currentOffset = OffsetDateTime.now().offset
         stubEmptyHistory()
@@ -375,11 +410,12 @@ class HomeServiceTest {
     fun `getHome counts 3 consecutive weeks including the current week`() {
         stubEmptyProfile()
         val monday = currentWeekMonday()
-        val sessions = listOf(
-            session(id = 1, startedAt = dateTimeInWeek(monday)),
-            session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(1), 2)),
-            session(id = 3, startedAt = dateTimeInWeek(monday.minusWeeks(2), 4))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = dateTimeInWeek(monday)),
+                session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(1), 2)),
+                session(id = 3, startedAt = dateTimeInWeek(monday.minusWeeks(2), 4)),
+            )
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(sessions)
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
@@ -395,10 +431,11 @@ class HomeServiceTest {
         stubEmptyProfile()
         val monday = currentWeekMonday()
         // No session in the current week; sessions in the two prior weeks are still consecutive.
-        val sessions = listOf(
-            session(id = 1, startedAt = dateTimeInWeek(monday.minusWeeks(1), 1)),
-            session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(2), 3))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = dateTimeInWeek(monday.minusWeeks(1), 1)),
+                session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(2), 3)),
+            )
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(sessions)
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
@@ -414,10 +451,11 @@ class HomeServiceTest {
         stubEmptyProfile()
         val monday = currentWeekMonday()
         // Session this week and 2 weeks ago, but NOT 1 week ago - a real gap.
-        val sessions = listOf(
-            session(id = 1, startedAt = dateTimeInWeek(monday)),
-            session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(2), 3))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = dateTimeInWeek(monday)),
+                session(id = 2, startedAt = dateTimeInWeek(monday.minusWeeks(2), 3)),
+            )
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(sessions)
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
@@ -432,11 +470,12 @@ class HomeServiceTest {
     fun `getHome counts a week only once even with multiple completed sessions logged that week`() {
         stubEmptyProfile()
         val monday = currentWeekMonday()
-        val sessions = listOf(
-            session(id = 1, startedAt = dateTimeInWeek(monday, 0)),
-            session(id = 2, startedAt = dateTimeInWeek(monday, 3)), // same week, different day
-            session(id = 3, startedAt = dateTimeInWeek(monday.minusWeeks(1), 1))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = dateTimeInWeek(monday, 0)),
+                session(id = 2, startedAt = dateTimeInWeek(monday, 3)), // same week, different day
+                session(id = 3, startedAt = dateTimeInWeek(monday.minusWeeks(1), 1)),
+            )
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(sessions)
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
@@ -470,10 +509,11 @@ class HomeServiceTest {
         stubEmptyProfile()
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(emptyList())
-        val sessions = listOf(
-            session(id = 1, startedAt = OffsetDateTime.now().minusDays(1)),
-            session(id = 2, startedAt = OffsetDateTime.now().minusDays(3))
-        )
+        val sessions =
+            listOf(
+                session(id = 1, startedAt = OffsetDateTime.now().minusDays(1)),
+                session(id = 2, startedAt = OffsetDateTime.now().minusDays(3)),
+            )
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
             .thenReturn(sessions)
 
@@ -488,11 +528,12 @@ class HomeServiceTest {
         stubEmptyProfile()
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(emptyList())
-        val sessions = listOf(
-            session(id = 3, startedAt = OffsetDateTime.now().minusDays(1)),
-            session(id = 2, startedAt = OffsetDateTime.now().minusDays(2)),
-            session(id = 1, startedAt = OffsetDateTime.now().minusDays(3))
-        )
+        val sessions =
+            listOf(
+                session(id = 3, startedAt = OffsetDateTime.now().minusDays(1)),
+                session(id = 2, startedAt = OffsetDateTime.now().minusDays(2)),
+                session(id = 1, startedAt = OffsetDateTime.now().minusDays(3)),
+            )
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
             .thenReturn(sessions)
 
@@ -506,19 +547,20 @@ class HomeServiceTest {
         stubEmptyProfile()
         whenever(workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(eq(userId), eq(SessionStatus.COMPLETED), any()))
             .thenReturn(emptyList())
-        val detailed = session(
-            id = 7,
-            workoutDayId = 3L,
-            startedAt = OffsetDateTime.now().minusDays(2),
-            splitNameSnapshot = "PPL",
-            workoutDayNameSnapshot = "Push"
-        ).apply {
-            durationSeconds = 3_600L
-            totalVolumeKg = 1234.5
-            completedSets = 10
-            totalSets = 12
-            notes = "felt strong"
-        }
+        val detailed =
+            session(
+                id = 7,
+                workoutDayId = 3L,
+                startedAt = OffsetDateTime.now().minusDays(2),
+                splitNameSnapshot = "PPL",
+                workoutDayNameSnapshot = "Push",
+            ).apply {
+                durationSeconds = 3_600L
+                totalVolumeKg = 1234.5
+                completedSets = 10
+                totalSets = 12
+                notes = "felt strong"
+            }
         whenever(workoutSessionRepository.findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(eq(userId), eq(SessionStatus.COMPLETED)))
             .thenReturn(listOf(detailed))
 

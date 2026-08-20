@@ -10,19 +10,14 @@ import jakarta.validation.constraints.Pattern
 data class ExerciseRequest(
     @field:NotBlank
     val name: String,
-
     @field:NotNull
     val primaryMuscleGroup: MuscleGroup,
-
     val secondaryMuscleGroups: List<MuscleGroup> = emptyList(),
-
     @field:NotNull
     val equipment: Equipment,
-
     @field:NotNull
     val inputType: ExerciseInputType,
-
-    val description: String?
+    val description: String?,
 )
 
 // Merge-patch semantics: a null/absent field means "leave unchanged." This means an
@@ -35,5 +30,5 @@ data class ExercisePatchRequest(
     val secondaryMuscleGroups: List<MuscleGroup>? = null,
     val equipment: Equipment? = null,
     val inputType: ExerciseInputType? = null,
-    val description: String? = null
+    val description: String? = null,
 )

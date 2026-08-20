@@ -7,7 +7,7 @@ data class TemplateSetRequest(
     val targetReps: Int? = null,
     val targetRepsMax: Int? = null,
     val targetDurationSeconds: Int? = null,
-    val setType: SetType
+    val setType: SetType,
 )
 
 data class TemplateSetPatchRequest(
@@ -15,7 +15,7 @@ data class TemplateSetPatchRequest(
     val targetReps: Int? = null,
     val targetRepsMax: Int? = null,
     val targetDurationSeconds: Int? = null,
-    val setType: SetType? = null
+    val setType: SetType? = null,
 )
 
 data class TemplateSetResponse(
@@ -24,5 +24,5 @@ data class TemplateSetResponse(
     val targetReps: Int?,
     val targetRepsMax: Int?,
     val targetDurationSeconds: Int?,
-    val setType: SetType
+    val setType: SetType,
 )

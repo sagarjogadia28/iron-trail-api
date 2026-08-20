@@ -12,13 +12,12 @@ import org.springframework.web.filter.OncePerRequestFilter
 
 @Component
 class JwtAuthenticationFilter(
-    private val jwtService: JwtService
+    private val jwtService: JwtService,
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val header = request.getHeader("Authorization")
         if (header != null && header.startsWith("Bearer ")) {
@@ -26,11 +25,15 @@ class JwtAuthenticationFilter(
             val userId = jwtService.extractUserId(token)
 
             if (userId != null && SecurityContextHolder.getContext().authentication == null) {
-                val authentication = UsernamePasswordAuthenticationToken(
-                    /* principal = */ userId,
-                    /* credentials = */ null,
-                    /* authorities = */ listOf(element = SimpleGrantedAuthority("ROLE_USER"))
-                )
+                val authentication =
+                    UsernamePasswordAuthenticationToken(
+                        // principal =
+                        userId,
+                        // credentials =
+                        null,
+                        // authorities =
+                        listOf(element = SimpleGrantedAuthority("ROLE_USER")),
+                    )
                 SecurityContextHolder.getContext().authentication = authentication
             }
         }

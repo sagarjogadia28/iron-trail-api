@@ -21,17 +21,20 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/workout-days")
 class WorkoutDayController(
-    private val splitService: SplitService
+    private val splitService: SplitService,
 ) {
     @PatchMapping("/{workoutDayId}")
     fun update(
         @PathVariable workoutDayId: Long,
         @Valid @RequestBody request: WorkoutDayPatchRequest,
-        @AuthenticationPrincipal userId: Long
-    ) : WorkoutDayResponse = splitService.updateWorkoutDay(workoutDayId, request, userId)
+        @AuthenticationPrincipal userId: Long,
+    ): WorkoutDayResponse = splitService.updateWorkoutDay(workoutDayId, request, userId)
 
     @DeleteMapping("/{workoutDayId}")
-    fun delete(@PathVariable workoutDayId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable workoutDayId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         splitService.deleteWorkoutDay(workoutDayId, userId)
         return ResponseEntity.noContent().build()
     }
@@ -40,7 +43,7 @@ class WorkoutDayController(
     fun duplicate(
         @PathVariable workoutDayId: Long,
         @Valid @RequestBody request: WorkoutDayRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<WorkoutDayResponse> {
         val duplicated = splitService.duplicateWorkoutDay(workoutDayId, request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(duplicated)
@@ -50,7 +53,7 @@ class WorkoutDayController(
     fun createTemplateExercise(
         @PathVariable workoutDayId: Long,
         @Valid @RequestBody request: TemplateExerciseRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<TemplateExerciseResponse> {
         val created = splitService.createTemplateExercise(workoutDayId, request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)

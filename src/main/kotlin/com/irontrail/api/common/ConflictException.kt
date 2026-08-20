@@ -1,3 +1,5 @@
 package com.irontrail.api.common
 
-open class ConflictException(message: String) : RuntimeException(message)
+open class ConflictException(
+    message: String,
+) : RuntimeException(message)

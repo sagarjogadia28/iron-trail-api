@@ -22,24 +22,25 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/exercises")
 class ExerciseController(
-    private val exerciseService: ExerciseService
+    private val exerciseService: ExerciseService,
 ) {
-
     @GetMapping
     fun findAll(
         @RequestParam(required = false) search: String?,
         @RequestParam(required = false) muscleGroups: List<MuscleGroup>?,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): List<ExerciseResponse> = exerciseService.findAll(search, muscleGroups, userId)
 
     @GetMapping("/{id}")
-    fun findById(@PathVariable id: Long, @AuthenticationPrincipal userId: Long): ExerciseResponse =
-        exerciseService.findById(id, userId)
+    fun findById(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ExerciseResponse = exerciseService.findById(id, userId)
 
     @PostMapping
     fun create(
         @Valid @RequestBody request: ExerciseRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<ExerciseResponse> {
         val created = exerciseService.create(request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
@@ -49,11 +50,14 @@ class ExerciseController(
     fun update(
         @PathVariable id: Long,
         @Valid @RequestBody request: ExercisePatchRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ExerciseResponse = exerciseService.update(id, request, userId)
 
     @DeleteMapping("/{id}")
-    fun delete(@PathVariable id: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         exerciseService.delete(id, userId)
         return ResponseEntity.noContent().build()
     }

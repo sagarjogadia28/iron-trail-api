@@ -31,7 +31,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.OffsetDateTime
 
 class UserProfileControllerTest {
-
     private val userProfileService: UserProfileService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(UserProfileController(userProfileService)).build()
 
@@ -41,16 +40,17 @@ class UserProfileControllerTest {
     @AfterEach
     fun clearAuth() = clearAuthentication()
 
-    private fun response(name: String = "Sagar") = UserProfileResponse(
-        userId = 10L,
-        name = name,
-        gender = Gender.MALE,
-        weightUnit = WeightUnit.KG,
-        measurementUnit = MeasurementUnit.METRIC,
-        restTimerNotificationsEnabled = true,
-        activeSplitId = null,
-        createdAt = OffsetDateTime.now()
-    )
+    private fun response(name: String = "Sagar") =
+        UserProfileResponse(
+            userId = 10L,
+            name = name,
+            gender = Gender.MALE,
+            weightUnit = WeightUnit.KG,
+            measurementUnit = MeasurementUnit.METRIC,
+            restTimerNotificationsEnabled = true,
+            activeSplitId = null,
+            createdAt = OffsetDateTime.now(),
+        )
 
     // ---- findByUserId ----
 
@@ -58,7 +58,8 @@ class UserProfileControllerTest {
     fun `GET returns 200 with the caller's own profile - no id in the route`() {
         whenever(userProfileService.findByUserId(10L)).thenReturn(response())
 
-        mockMvc.perform(get("/v1/profile"))
+        mockMvc
+            .perform(get("/v1/profile"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.name").value("Sagar"))
     }
@@ -77,31 +78,34 @@ class UserProfileControllerTest {
         val request = UserProfileRequest("Sagar", Gender.MALE, WeightUnit.KG, MeasurementUnit.METRIC)
         whenever(userProfileService.create(request, 10L)).thenReturn(response())
 
-        mockMvc.perform(
-            post("/v1/profile")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Sagar","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}""")
-        ).andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/profile")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Sagar","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}"""),
+            ).andExpect(status().isCreated)
     }
 
     @Test
     fun `POST retried after a profile already exists returns 409, not a duplicate create`() {
         whenever(userProfileService.create(any(), eq(10L))).thenThrow(ConflictException("Profile already exists"))
 
-        mockMvc.perform(
-            post("/v1/profile")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Sagar","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}""")
-        ).andExpect(status().isConflict)
+        mockMvc
+            .perform(
+                post("/v1/profile")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Sagar","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}"""),
+            ).andExpect(status().isConflict)
     }
 
     @Test
     fun `POST with a name under 2 characters returns 400 and never calls the service`() {
-        mockMvc.perform(
-            post("/v1/profile")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"S","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}""")
-        ).andExpect(status().isBadRequest)
+        mockMvc
+            .perform(
+                post("/v1/profile")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"S","gender":"MALE","weightUnit":"KG","measurementUnit":"METRIC"}"""),
+            ).andExpect(status().isBadRequest)
 
         verify(userProfileService, never()).create(any(), any())
     }
@@ -113,7 +117,8 @@ class UserProfileControllerTest {
         whenever(userProfileService.update(eq(UserProfilePatchRequest(weightUnit = WeightUnit.LBS)), eq(10L)))
             .thenReturn(response())
 
-        mockMvc.perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"weightUnit":"LBS"}"""))
+        mockMvc
+            .perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"weightUnit":"LBS"}"""))
             .andExpect(status().isOk)
     }
 
@@ -121,13 +126,15 @@ class UserProfileControllerTest {
     fun `PATCH setting activeSplitId to a split the caller doesn't own returns 404`() {
         whenever(userProfileService.update(any(), eq(10L))).thenThrow(NotFoundException("Split", 99L))
 
-        mockMvc.perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"activeSplitId":99}"""))
+        mockMvc
+            .perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"activeSplitId":99}"""))
             .andExpect(status().isNotFound)
     }
 
     @Test
     fun `PATCH with a blank name returns 400 and never calls the service`() {
-        mockMvc.perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"name":"   "}"""))
+        mockMvc
+            .perform(patch("/v1/profile").contentType(MediaType.APPLICATION_JSON).content("""{"name":"   "}"""))
             .andExpect(status().isBadRequest)
 
         verify(userProfileService, never()).update(any(), any())

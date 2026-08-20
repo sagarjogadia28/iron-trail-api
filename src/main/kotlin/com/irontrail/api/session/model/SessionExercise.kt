@@ -19,24 +19,18 @@ import jakarta.persistence.Table
 class SessionExercise(
     @Column(name = "exercise_id")
     var exerciseId: Long? = null,
-
     @Column(name = "exercise_name_snapshot")
     var exerciseNameSnapshot: String,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "input_type_snapshot")
     var inputTypeSnapshot: ExerciseInputType,
-
     @Column(name = "is_rep_range")
     var isRepRange: Boolean,
-
     @Column(name = "rest_duration_seconds")
     var restDurationSeconds: Int,
-
     @Column(name = "sort_order")
     var sortOrder: Int,
-
-    var notes: String? = null
+    var notes: String? = null,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -58,6 +52,5 @@ class SessionExercise(
 
     override fun hashCode(): Int = javaClass.hashCode()
 
-    override fun toString(): String =
-        "SessionExercise(sessionExerciseId=$sessionExerciseId, exerciseNameSnapshot=$exerciseNameSnapshot)"
+    override fun toString(): String = "SessionExercise(sessionExerciseId=$sessionExerciseId, exerciseNameSnapshot=$exerciseNameSnapshot)"
 }

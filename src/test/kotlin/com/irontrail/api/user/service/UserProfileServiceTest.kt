@@ -26,7 +26,6 @@ import org.mockito.kotlin.whenever
 import java.util.Optional
 
 class UserProfileServiceTest {
-
     private val userProfileRepository: UserProfileRepository = mock()
     private val splitRepository: SplitRepository = mock()
 
@@ -39,7 +38,7 @@ class UserProfileServiceTest {
         weightUnit: WeightUnit = WeightUnit.KG,
         measurementUnit: MeasurementUnit = MeasurementUnit.METRIC,
         restTimerNotificationsEnabled: Boolean = true,
-        activeSplitId: Long? = null
+        activeSplitId: Long? = null,
     ) = UserProfile(
         name = name,
         gender = gender,
@@ -47,11 +46,13 @@ class UserProfileServiceTest {
         measurementUnit = measurementUnit,
         restTimerNotificationsEnabled = restTimerNotificationsEnabled,
         profileImagePath = null,
-        activeSplitId = activeSplitId
+        activeSplitId = activeSplitId,
     ).apply { this.userId = userId }
 
-    private fun ownedSplit(splitId: Long = 10L, ownerId: Long = 1L) =
-        Split(ownerId = ownerId, name = "Push Pull Legs").apply { this.splitId = splitId }
+    private fun ownedSplit(
+        splitId: Long = 10L,
+        ownerId: Long = 1L,
+    ) = Split(ownerId = ownerId, name = "Push Pull Legs").apply { this.splitId = splitId }
 
     // ---- create ----
 
@@ -61,10 +62,11 @@ class UserProfileServiceTest {
         val captor = argumentCaptor<UserProfile>()
         whenever(userProfileRepository.save(captor.capture())).thenAnswer { it.arguments[0] as UserProfile }
 
-        val response = userProfileService.create(
-            UserProfileRequest("John", Gender.MALE, WeightUnit.KG, MeasurementUnit.METRIC),
-            userId = 1L
-        )
+        val response =
+            userProfileService.create(
+                UserProfileRequest("John", Gender.MALE, WeightUnit.KG, MeasurementUnit.METRIC),
+                userId = 1L,
+            )
 
         assertEquals(1L, captor.firstValue.userId)
         assertEquals("John", captor.firstValue.name)
@@ -82,7 +84,7 @@ class UserProfileServiceTest {
         assertThrows(ConflictException::class.java) {
             userProfileService.create(
                 UserProfileRequest("John", Gender.MALE, WeightUnit.KG, MeasurementUnit.METRIC),
-                userId = 1L
+                userId = 1L,
             )
         }
 
@@ -97,7 +99,7 @@ class UserProfileServiceTest {
 
         userProfileService.create(
             UserProfileRequest("Jane", Gender.FEMALE, WeightUnit.LBS, MeasurementUnit.IMPERIAL),
-            userId = 2L
+            userId = 2L,
         )
 
         assertTrue(captor.firstValue.restTimerNotificationsEnabled)
@@ -140,14 +142,15 @@ class UserProfileServiceTest {
 
     @Test
     fun `update with an entirely empty patch leaves every field unchanged`() {
-        val profile = savedProfile(
-            name = "John",
-            gender = Gender.MALE,
-            weightUnit = WeightUnit.KG,
-            measurementUnit = MeasurementUnit.METRIC,
-            restTimerNotificationsEnabled = true,
-            activeSplitId = 10L
-        )
+        val profile =
+            savedProfile(
+                name = "John",
+                gender = Gender.MALE,
+                weightUnit = WeightUnit.KG,
+                measurementUnit = MeasurementUnit.METRIC,
+                restTimerNotificationsEnabled = true,
+                activeSplitId = 10L,
+            )
         whenever(userProfileRepository.findById(1L)).thenReturn(Optional.of(profile))
 
         val response = userProfileService.update(UserProfilePatchRequest(), userId = 1L)
@@ -209,10 +212,11 @@ class UserProfileServiceTest {
         val profile = savedProfile(restTimerNotificationsEnabled = true)
         whenever(userProfileRepository.findById(1L)).thenReturn(Optional.of(profile))
 
-        val response = userProfileService.update(
-            UserProfilePatchRequest(restTimerNotificationsEnabled = false),
-            userId = 1L
-        )
+        val response =
+            userProfileService.update(
+                UserProfilePatchRequest(restTimerNotificationsEnabled = false),
+                userId = 1L,
+            )
 
         assertFalse(response.restTimerNotificationsEnabled)
     }
@@ -232,10 +236,11 @@ class UserProfileServiceTest {
         val profile = savedProfile(restTimerNotificationsEnabled = false)
         whenever(userProfileRepository.findById(1L)).thenReturn(Optional.of(profile))
 
-        val response = userProfileService.update(
-            UserProfilePatchRequest(restTimerNotificationsEnabled = true),
-            userId = 1L
-        )
+        val response =
+            userProfileService.update(
+                UserProfilePatchRequest(restTimerNotificationsEnabled = true),
+                userId = 1L,
+            )
 
         assertTrue(response.restTimerNotificationsEnabled)
     }

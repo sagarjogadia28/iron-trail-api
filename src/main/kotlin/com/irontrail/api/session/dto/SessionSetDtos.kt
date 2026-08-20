@@ -7,7 +7,7 @@ data class SessionSetRequest(
     val setType: SetType,
     val targetReps: Int? = null,
     val targetRepsMax: Int? = null,
-    val targetDurationSeconds: Int? = null
+    val targetDurationSeconds: Int? = null,
 )
 
 data class SessionSetPatchRequest(
@@ -16,7 +16,7 @@ data class SessionSetPatchRequest(
     val reps: Int? = null,
     val weightKg: Double? = null,
     val durationSeconds: Int? = null,
-    val isCompleted: Boolean? = null
+    val isCompleted: Boolean? = null,
 )
 
 data class SessionSetResponse(
@@ -29,5 +29,5 @@ data class SessionSetResponse(
     val reps: Int?,
     val weightKg: Double?,
     val durationSeconds: Int?,
-    val isCompleted: Boolean
+    val isCompleted: Boolean,
 )

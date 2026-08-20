@@ -15,21 +15,25 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 class UserProfileService(
     private val userProfileRepository: UserProfileRepository,
-    private val splitRepository: SplitRepository
+    private val splitRepository: SplitRepository,
 ) {
-    fun create(request: UserProfileRequest, userId: Long): UserProfileResponse {
+    fun create(
+        request: UserProfileRequest,
+        userId: Long,
+    ): UserProfileResponse {
         if (userProfileRepository.existsById(userId)) {
             throw ConflictException("Profile already exists")
         }
 
-        val profile = UserProfile(
-            name = request.name,
-            gender = request.gender,
-            weightUnit = request.weightUnit,
-            measurementUnit = request.measurementUnit,
-            restTimerNotificationsEnabled = true,
-            profileImagePath = null
-        ).apply { this.userId = userId }
+        val profile =
+            UserProfile(
+                name = request.name,
+                gender = request.gender,
+                weightUnit = request.weightUnit,
+                measurementUnit = request.measurementUnit,
+                restTimerNotificationsEnabled = true,
+                profileImagePath = null,
+            ).apply { this.userId = userId }
 
         return userProfileRepository.save(profile).toResponse()
     }
@@ -37,7 +41,10 @@ class UserProfileService(
     fun findByUserId(userId: Long): UserProfileResponse =
         userProfileRepository.findById(userId).orElseThrow { NotFoundException("UserProfile", userId) }.toResponse()
 
-    fun update(request: UserProfilePatchRequest, userId: Long): UserProfileResponse {
+    fun update(
+        request: UserProfilePatchRequest,
+        userId: Long,
+    ): UserProfileResponse {
         val profile = userProfileRepository.findById(userId).orElseThrow { NotFoundException("UserProfile", userId) }
         request.name?.let { profile.name = it }
         request.gender?.let { profile.gender = it }
@@ -51,14 +58,15 @@ class UserProfileService(
         return profile.toResponse()
     }
 
-    private fun UserProfile.toResponse() = UserProfileResponse(
-        userId = userId,
-        name = name,
-        gender = gender,
-        weightUnit = weightUnit,
-        measurementUnit = measurementUnit,
-        restTimerNotificationsEnabled = restTimerNotificationsEnabled,
-        activeSplitId = activeSplitId,
-        createdAt = createdAt
-    )
+    private fun UserProfile.toResponse() =
+        UserProfileResponse(
+            userId = userId,
+            name = name,
+            gender = gender,
+            weightUnit = weightUnit,
+            measurementUnit = measurementUnit,
+            restTimerNotificationsEnabled = restTimerNotificationsEnabled,
+            activeSplitId = activeSplitId,
+            createdAt = createdAt,
+        )
 }

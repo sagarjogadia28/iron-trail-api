@@ -32,7 +32,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class ExerciseControllerTest {
-
     private val exerciseService: ExerciseService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(ExerciseController(exerciseService)).build()
 
@@ -45,7 +44,7 @@ class ExerciseControllerTest {
     private fun response(
         id: Long = 5L,
         name: String = "Bench Press",
-        ownerId: Long? = null
+        ownerId: Long? = null,
     ) = ExerciseResponse(
         exerciseId = id,
         wgerId = null,
@@ -56,7 +55,7 @@ class ExerciseControllerTest {
         inputType = ExerciseInputType.REPS,
         description = null,
         imageUrl = null,
-        ownerId = ownerId
+        ownerId = ownerId,
     )
 
     // ---- findAll ----
@@ -65,7 +64,8 @@ class ExerciseControllerTest {
     fun `GET list returns 200 with the mapped body`() {
         whenever(exerciseService.findAll(null, null, 10L)).thenReturn(listOf(response()))
 
-        mockMvc.perform(get("/v1/exercises"))
+        mockMvc
+            .perform(get("/v1/exercises"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].name").value("Bench Press"))
     }
@@ -74,18 +74,20 @@ class ExerciseControllerTest {
     fun `GET list forwards search and muscleGroups query params, and the caller's own id`() {
         whenever(exerciseService.findAll(any(), any(), any())).thenReturn(emptyList())
 
-        mockMvc.perform(
-            get("/v1/exercises")
-                .param("search", "bench")
-                .param("muscleGroups", "CHEST", "TRICEPS")
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                get("/v1/exercises")
+                    .param("search", "bench")
+                    .param("muscleGroups", "CHEST", "TRICEPS"),
+            ).andExpect(status().isOk)
 
         verify(exerciseService).findAll("bench", listOf(MuscleGroup.CHEST, MuscleGroup.TRICEPS), 10L)
     }
 
     @Test
     fun `GET list with an invalid muscleGroups enum value returns 400 with the standard error shape`() {
-        mockMvc.perform(get("/v1/exercises").param("muscleGroups", "NOT_A_REAL_GROUP"))
+        mockMvc
+            .perform(get("/v1/exercises").param("muscleGroups", "NOT_A_REAL_GROUP"))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("Invalid value for parameter 'muscleGroups'"))
     }
@@ -96,7 +98,8 @@ class ExerciseControllerTest {
     fun `GET by id returns 200 with the mapped body`() {
         whenever(exerciseService.findById(5L, 10L)).thenReturn(response(id = 5L))
 
-        mockMvc.perform(get("/v1/exercises/5"))
+        mockMvc
+            .perform(get("/v1/exercises/5"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.exerciseId").value(5))
     }
@@ -105,7 +108,8 @@ class ExerciseControllerTest {
     fun `GET by id returns 404 with the standard error shape when the service throws NotFoundException`() {
         whenever(exerciseService.findById(999L, 10L)).thenThrow(NotFoundException("Exercise", 999L))
 
-        mockMvc.perform(get("/v1/exercises/999"))
+        mockMvc
+            .perform(get("/v1/exercises/999"))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.message").value("Exercise not found: 999"))
     }
@@ -114,16 +118,17 @@ class ExerciseControllerTest {
 
     @Test
     fun `POST with a valid body returns 201 with the created resource`() {
-        val json = """
+        val json =
+            """
             {"name":"Incline Press","primaryMuscleGroup":"CHEST","secondaryMuscleGroups":[],
              "equipment":"DUMBBELL","inputType":"REPS","description":null}
-        """.trimIndent()
+            """.trimIndent()
         whenever(exerciseService.create(any(), eq(10L))).thenReturn(response(id = 42L, name = "Incline Press"))
 
-        mockMvc.perform(
-            post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(json)
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(json),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.exerciseId").value(42))
 
         verify(exerciseService).create(
@@ -133,9 +138,9 @@ class ExerciseControllerTest {
                 secondaryMuscleGroups = emptyList(),
                 equipment = Equipment.DUMBBELL,
                 inputType = ExerciseInputType.REPS,
-                description = null
+                description = null,
             ),
-            10L
+            10L,
         )
     }
 
@@ -143,7 +148,8 @@ class ExerciseControllerTest {
     fun `POST with a blank name returns 400 with field-level validation errors, and never calls the service`() {
         val invalidJson = """{"name":"","primaryMuscleGroup":"CHEST","equipment":"BARBELL","inputType":"REPS"}"""
 
-        mockMvc.perform(post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(invalidJson))
+        mockMvc
+            .perform(post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(invalidJson))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.errors.name").exists())
 
@@ -154,7 +160,8 @@ class ExerciseControllerTest {
     fun `POST with a missing required field returns 400 via the malformed-body handler, not a 500`() {
         val missingFieldsJson = """{"name":"Incline Press"}"""
 
-        mockMvc.perform(post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(missingFieldsJson))
+        mockMvc
+            .perform(post("/v1/exercises").contentType(MediaType.APPLICATION_JSON).content(missingFieldsJson))
             .andExpect(status().isBadRequest)
     }
 
@@ -166,7 +173,8 @@ class ExerciseControllerTest {
         whenever(exerciseService.update(eq(5L), eq(ExercisePatchRequest(name = "Renamed")), eq(10L)))
             .thenReturn(response(id = 5L, name = "Renamed"))
 
-        mockMvc.perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content(json))
+        mockMvc
+            .perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content(json))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.name").value("Renamed"))
     }
@@ -175,7 +183,8 @@ class ExerciseControllerTest {
     fun `PATCH with a blank name returns 400 and never calls the service`() {
         val blankNameJson = """{"name":"   "}"""
 
-        mockMvc.perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content(blankNameJson))
+        mockMvc
+            .perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content(blankNameJson))
             .andExpect(status().isBadRequest)
 
         verify(exerciseService, never()).update(any(), any(), any())
@@ -185,7 +194,8 @@ class ExerciseControllerTest {
     fun `PATCH returns 404 when the service reports the exercise isn't owned by the caller`() {
         whenever(exerciseService.update(eq(5L), any(), eq(10L))).thenThrow(NotFoundException("Exercise", 5L))
 
-        mockMvc.perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/exercises/5").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 
@@ -193,7 +203,8 @@ class ExerciseControllerTest {
 
     @Test
     fun `DELETE returns 204 and calls the service with the path id and caller's id`() {
-        mockMvc.perform(delete("/v1/exercises/5"))
+        mockMvc
+            .perform(delete("/v1/exercises/5"))
             .andExpect(status().isNoContent)
             .andExpect(content().string(""))
 
@@ -204,7 +215,8 @@ class ExerciseControllerTest {
     fun `DELETE returns 404 when the service reports not-found`() {
         doThrow(NotFoundException("Exercise", 5L)).whenever(exerciseService).delete(5L, 10L)
 
-        mockMvc.perform(delete("/v1/exercises/5"))
+        mockMvc
+            .perform(delete("/v1/exercises/5"))
             .andExpect(status().isNotFound)
     }
 }

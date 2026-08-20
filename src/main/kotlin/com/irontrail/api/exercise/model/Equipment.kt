@@ -9,5 +9,5 @@ enum class Equipment {
     KETTLEBELL,
     BAND,
     BENCH,
-    OTHER
+    OTHER,
 }

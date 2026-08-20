@@ -12,11 +12,9 @@ import jakarta.persistence.Table
 class WorkoutDay(
     @Column(name = "split_id")
     var splitId: Long,
-
     var name: String,
-
     @Column(name = "sort_order")
-    var sortOrder: Int
+    var sortOrder: Int,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +29,5 @@ class WorkoutDay(
 
     override fun hashCode(): Int = javaClass.hashCode()
 
-    override fun toString(): String =
-        "WorkoutDay(workoutDayId=$workoutDayId, splitId=$splitId, name=$name, sortOrder=$sortOrder)"
+    override fun toString(): String = "WorkoutDay(workoutDayId=$workoutDayId, splitId=$splitId, name=$name, sortOrder=$sortOrder)"
 }

@@ -17,35 +17,25 @@ import java.time.OffsetDateTime
 class WorkoutSession(
     @Column(name = "owner_id")
     var ownerId: Long,
-
     @Column(name = "workout_day_id")
     var workoutDayId: Long? = null,
-
     @Column(name = "split_name_snapshot")
     var splitNameSnapshot: String? = null,
-
     @Column(name = "workout_day_name_snapshot")
     var workoutDayNameSnapshot: String? = null,
-
     @Column(name = "started_at")
     var startedAt: OffsetDateTime,
-
     @Column(name = "duration_seconds")
     var durationSeconds: Long,
-
     @Column(name = "total_volume_kg")
     var totalVolumeKg: Double? = null,
-
     @Column(name = "completed_sets")
     var completedSets: Int? = null,
-
     @Column(name = "total_sets")
     var totalSets: Int? = null,
-
     var notes: String? = null,
-
     @Enumerated(EnumType.STRING)
-    var status: SessionStatus
+    var status: SessionStatus,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,6 +53,5 @@ class WorkoutSession(
 
     override fun hashCode(): Int = javaClass.hashCode()
 
-    override fun toString(): String =
-        "WorkoutSession(sessionId=$sessionId, ownerId=$ownerId, status=$status)"
+    override fun toString(): String = "WorkoutSession(sessionId=$sessionId, ownerId=$ownerId, status=$status)"
 }

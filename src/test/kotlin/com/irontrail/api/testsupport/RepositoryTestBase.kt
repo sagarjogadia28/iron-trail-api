@@ -9,11 +9,12 @@ import org.testcontainers.postgresql.PostgreSQLContainer
 // Started once per JVM (singleton container pattern) and shared across every repository test
 // class that extends this base, rather than one container per class - Flyway migrations plus
 // a fresh Postgres instance is too slow to pay per test class.
-private val postgres: PostgreSQLContainer = PostgreSQLContainer("postgres:16")
-    .withDatabaseName("irontrail_test")
-    .withUsername("irontrail_test")
-    .withPassword("irontrail_test")
-    .apply { start() }
+private val postgres: PostgreSQLContainer =
+    PostgreSQLContainer("postgres:16")
+        .withDatabaseName("irontrail_test")
+        .withUsername("irontrail_test")
+        .withPassword("irontrail_test")
+        .apply { start() }
 
 // AutoConfigureTestDatabase.Replace.NONE: @DataJpaTest defaults to swapping in an embedded
 // in-memory DB, which would skip Flyway/real Postgres SQL semantics entirely (exactly the class

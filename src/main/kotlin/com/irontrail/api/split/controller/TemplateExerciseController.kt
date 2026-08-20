@@ -1,7 +1,6 @@
 package com.irontrail.api.split.controller
 
 import com.irontrail.api.split.dto.TemplateExercisePatchRequest
-import com.irontrail.api.split.dto.TemplateExerciseRequest
 import com.irontrail.api.split.dto.TemplateExerciseResponse
 import com.irontrail.api.split.dto.TemplateSetRequest
 import com.irontrail.api.split.dto.TemplateSetResponse
@@ -21,17 +20,20 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/template-exercises")
 class TemplateExerciseController(
-    private val splitService: SplitService
+    private val splitService: SplitService,
 ) {
     @PatchMapping("/{templateExerciseId}")
     fun update(
         @PathVariable templateExerciseId: Long,
         @Valid @RequestBody request: TemplateExercisePatchRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): TemplateExerciseResponse = splitService.updateTemplateExercise(templateExerciseId, request, userId)
 
     @DeleteMapping("/{templateExerciseId}")
-    fun delete(@PathVariable templateExerciseId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable templateExerciseId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         splitService.deleteTemplateExercise(templateExerciseId, userId)
         return ResponseEntity.noContent().build()
     }
@@ -40,7 +42,7 @@ class TemplateExerciseController(
     fun createTemplateSet(
         @PathVariable templateExerciseId: Long,
         @Valid @RequestBody request: TemplateSetRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<TemplateSetResponse> {
         val created = splitService.createTemplateSet(templateExerciseId, request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)

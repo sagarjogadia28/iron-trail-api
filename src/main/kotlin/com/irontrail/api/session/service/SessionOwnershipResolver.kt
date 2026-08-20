@@ -13,17 +13,26 @@ import org.springframework.stereotype.Component
 class SessionOwnershipResolver(
     private val workoutSessionRepository: WorkoutSessionRepository,
     private val sessionExerciseRepository: SessionExerciseRepository,
-    private val sessionSetRepository: SessionSetRepository
+    private val sessionSetRepository: SessionSetRepository,
 ) {
-    fun getOwnedWorkoutSession(sessionId: Long, userId: Long): WorkoutSession =
+    fun getOwnedWorkoutSession(
+        sessionId: Long,
+        userId: Long,
+    ): WorkoutSession =
         workoutSessionRepository.findBySessionIdAndOwnerId(sessionId, userId)
             ?: throw NotFoundException("WorkoutSession", sessionId)
 
-    fun getOwnedSessionExercise(sessionExerciseId: Long, userId: Long): SessionExercise =
+    fun getOwnedSessionExercise(
+        sessionExerciseId: Long,
+        userId: Long,
+    ): SessionExercise =
         sessionExerciseRepository.findOwnedBySessionExerciseId(sessionExerciseId, userId)
             ?: throw NotFoundException("SessionExercise", sessionExerciseId)
 
-    fun getOwnedSessionSet(sessionSetId: Long, userId: Long): SessionSet =
+    fun getOwnedSessionSet(
+        sessionSetId: Long,
+        userId: Long,
+    ): SessionSet =
         sessionSetRepository.findOwnedBySessionSetId(sessionSetId, userId)
             ?: throw NotFoundException("SessionSet", sessionSetId)
 }

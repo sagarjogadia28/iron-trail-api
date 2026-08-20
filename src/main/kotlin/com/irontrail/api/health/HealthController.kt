@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/health")
 class HealthController(
-    private val healthService: HealthService
+    private val healthService: HealthService,
 ) {
     @GetMapping
     fun health(): HealthStatus = healthService.status()

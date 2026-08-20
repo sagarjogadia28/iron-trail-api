@@ -21,7 +21,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
 class ExerciseServiceTest {
-
     private val exerciseRepository: ExerciseRepository = mock()
     private val exerciseService = ExerciseService(exerciseRepository)
 
@@ -35,7 +34,7 @@ class ExerciseServiceTest {
         inputType: ExerciseInputType = ExerciseInputType.REPS,
         description: String? = "A compound chest exercise",
         wgerId: Int? = null,
-        imageUrl: String? = null
+        imageUrl: String? = null,
     ) = Exercise(
         wgerId = wgerId,
         name = name,
@@ -45,7 +44,7 @@ class ExerciseServiceTest {
         inputType = inputType,
         description = description,
         imageUrl = imageUrl,
-        ownerId = ownerId
+        ownerId = ownerId,
     ).apply { exerciseId = id }
 
     private fun exerciseRequest(
@@ -54,14 +53,14 @@ class ExerciseServiceTest {
         secondary: List<MuscleGroup> = emptyList(),
         equipment: Equipment = Equipment.DUMBBELL,
         inputType: ExerciseInputType = ExerciseInputType.REPS,
-        description: String? = "Upper chest focus"
+        description: String? = "Upper chest focus",
     ) = ExerciseRequest(
         name = name,
         primaryMuscleGroup = primary,
         secondaryMuscleGroups = secondary,
         equipment = equipment,
         inputType = inputType,
-        description = description
+        description = description,
     )
 
     // ---- findAll ----
@@ -74,7 +73,10 @@ class ExerciseServiceTest {
         exerciseService.findAll("100%_test\\path", null, 1L)
 
         verify(exerciseRepository).findVisibleBySearchAndMuscleGroups(
-            "100\\%\\_test\\\\path", false, emptyList(), 1L
+            "100\\%\\_test\\\\path",
+            false,
+            emptyList(),
+            1L,
         )
     }
 
@@ -174,9 +176,10 @@ class ExerciseServiceTest {
     fun `findById throws NotFoundException naming the resource and id when the exercise doesn't exist`() {
         whenever(exerciseRepository.findVisibleById(99L, 5L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            exerciseService.findById(99L, 5L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                exerciseService.findById(99L, 5L)
+            }
         assertEquals("Exercise not found: 99", ex.message)
     }
 
@@ -216,14 +219,15 @@ class ExerciseServiceTest {
 
     @Test
     fun `create maps every request field onto the new entity`() {
-        val request = ExerciseRequest(
-            name = "Incline Press",
-            primaryMuscleGroup = MuscleGroup.CHEST,
-            secondaryMuscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS),
-            equipment = Equipment.DUMBBELL,
-            inputType = ExerciseInputType.REPS,
-            description = "Upper chest focus"
-        )
+        val request =
+            ExerciseRequest(
+                name = "Incline Press",
+                primaryMuscleGroup = MuscleGroup.CHEST,
+                secondaryMuscleGroups = listOf(MuscleGroup.SHOULDERS, MuscleGroup.TRICEPS),
+                equipment = Equipment.DUMBBELL,
+                inputType = ExerciseInputType.REPS,
+                description = "Upper chest focus",
+            )
         val captor = argumentCaptor<Exercise>()
         whenever(exerciseRepository.save(captor.capture())).thenAnswer { it.arguments[0] as Exercise }
 
@@ -251,13 +255,14 @@ class ExerciseServiceTest {
 
     @Test
     fun `create defaults secondaryMuscleGroups to empty when the request omits them`() {
-        val request = ExerciseRequest(
-            name = "Plank",
-            primaryMuscleGroup = MuscleGroup.CORE,
-            equipment = Equipment.BODYWEIGHT,
-            inputType = ExerciseInputType.TIMED,
-            description = null
-        )
+        val request =
+            ExerciseRequest(
+                name = "Plank",
+                primaryMuscleGroup = MuscleGroup.CORE,
+                equipment = Equipment.BODYWEIGHT,
+                inputType = ExerciseInputType.TIMED,
+                description = null,
+            )
         val captor = argumentCaptor<Exercise>()
         whenever(exerciseRepository.save(captor.capture())).thenAnswer { it.arguments[0] as Exercise }
 
@@ -283,9 +288,10 @@ class ExerciseServiceTest {
     fun `update throws NotFoundException when no exercise is owned by the caller with that id`() {
         whenever(exerciseRepository.findByExerciseIdAndOwnerId(5L, 1L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            exerciseService.update(5L, ExercisePatchRequest(name = "New Name"), 1L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                exerciseService.update(5L, ExercisePatchRequest(name = "New Name"), 1L)
+            }
         assertEquals("Exercise not found: 5", ex.message)
     }
 
@@ -385,18 +391,19 @@ class ExerciseServiceTest {
         val existing = exercise()
         whenever(exerciseRepository.findByExerciseIdAndOwnerId(5L, 1L)).thenReturn(existing)
 
-        val response = exerciseService.update(
-            5L,
-            ExercisePatchRequest(
-                name = "Close-Grip Bench Press",
-                primaryMuscleGroup = MuscleGroup.TRICEPS,
-                secondaryMuscleGroups = listOf(MuscleGroup.CHEST),
-                equipment = Equipment.MACHINE,
-                inputType = ExerciseInputType.TIMED,
-                description = "Overwritten"
-            ),
-            1L
-        )
+        val response =
+            exerciseService.update(
+                5L,
+                ExercisePatchRequest(
+                    name = "Close-Grip Bench Press",
+                    primaryMuscleGroup = MuscleGroup.TRICEPS,
+                    secondaryMuscleGroups = listOf(MuscleGroup.CHEST),
+                    equipment = Equipment.MACHINE,
+                    inputType = ExerciseInputType.TIMED,
+                    description = "Overwritten",
+                ),
+                1L,
+            )
 
         assertEquals("Close-Grip Bench Press", response.name)
         assertEquals(MuscleGroup.TRICEPS, response.primaryMuscleGroup)
@@ -433,9 +440,10 @@ class ExerciseServiceTest {
     fun `delete throws NotFoundException and never calls repository delete when the id doesn't exist`() {
         whenever(exerciseRepository.findByExerciseIdAndOwnerId(5L, 1L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            exerciseService.delete(5L, 1L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                exerciseService.delete(5L, 1L)
+            }
         assertEquals("Exercise not found: 5", ex.message)
         verify(exerciseRepository, never()).delete(any())
     }

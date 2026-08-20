@@ -24,26 +24,32 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/workout-sessions")
 class WorkoutSessionController(
-    private val workoutSessionService: WorkoutSessionService
+    private val workoutSessionService: WorkoutSessionService,
 ) {
     @GetMapping
     fun findAll(
-        @RequestParam(required = false) splitName: String?, @AuthenticationPrincipal userId: Long
+        @RequestParam(required = false) splitName: String?,
+        @AuthenticationPrincipal userId: Long,
     ): List<WorkoutSessionResponse> = workoutSessionService.findAll(userId, splitName)
 
     @GetMapping("/active")
-    fun findActive(@AuthenticationPrincipal userId: Long): ResponseEntity<WorkoutSessionResponse> {
+    fun findActive(
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<WorkoutSessionResponse> {
         val active = workoutSessionService.findActive(userId) ?: return ResponseEntity.noContent().build()
         return ResponseEntity.ok(active)
     }
 
     @GetMapping("/{sessionId}")
-    fun findById(@PathVariable sessionId: Long, @AuthenticationPrincipal userId: Long): WorkoutSessionDetailResponse =
-        workoutSessionService.findById(sessionId, userId)
+    fun findById(
+        @PathVariable sessionId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): WorkoutSessionDetailResponse = workoutSessionService.findById(sessionId, userId)
 
     @PostMapping
     fun create(
-        @Valid @RequestBody request: WorkoutSessionRequest, @AuthenticationPrincipal userId: Long
+        @Valid @RequestBody request: WorkoutSessionRequest,
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<WorkoutSessionDetailResponse> {
         val created = workoutSessionService.create(request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
@@ -51,11 +57,16 @@ class WorkoutSessionController(
 
     @PatchMapping("/{sessionId}")
     fun update(
-        @PathVariable sessionId: Long, @Valid @RequestBody request: WorkoutSessionPatchRequest, @AuthenticationPrincipal userId: Long
+        @PathVariable sessionId: Long,
+        @Valid @RequestBody request: WorkoutSessionPatchRequest,
+        @AuthenticationPrincipal userId: Long,
     ): WorkoutSessionDetailResponse = workoutSessionService.update(sessionId, request, userId)
 
     @DeleteMapping("/{sessionId}")
-    fun delete(@PathVariable sessionId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable sessionId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         workoutSessionService.delete(sessionId, userId)
         return ResponseEntity.noContent().build()
     }
@@ -64,7 +75,7 @@ class WorkoutSessionController(
     fun createSessionExercise(
         @PathVariable sessionId: Long,
         @Valid @RequestBody request: SessionExerciseRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<SessionExerciseResponse> {
         val created = workoutSessionService.createSessionExercise(sessionId, request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)

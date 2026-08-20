@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class SessionExerciseControllerTest {
-
     private val workoutSessionService: WorkoutSessionService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(SessionExerciseController(workoutSessionService)).build()
 
@@ -40,9 +39,20 @@ class SessionExerciseControllerTest {
     @AfterEach
     fun clearAuth() = clearAuthentication()
 
-    private fun setResponse(id: Long = 1L, reps: Int? = 8) = SessionSetResponse(
-        sessionSetId = id, sortOrder = 0, setType = SetType.NORMAL, targetReps = 8, targetRepsMax = null,
-        targetDurationSeconds = null, reps = reps, weightKg = null, durationSeconds = null, isCompleted = reps != null
+    private fun setResponse(
+        id: Long = 1L,
+        reps: Int? = 8,
+    ) = SessionSetResponse(
+        sessionSetId = id,
+        sortOrder = 0,
+        setType = SetType.NORMAL,
+        targetReps = 8,
+        targetRepsMax = null,
+        targetDurationSeconds = null,
+        reps = reps,
+        weightKg = null,
+        durationSeconds = null,
+        isCompleted = reps != null,
     )
 
     // ---- update ----
@@ -52,10 +62,10 @@ class SessionExerciseControllerTest {
         whenever(workoutSessionService.updateSessionExercise(eq(1L), eq(SessionExercisePatchRequest(notes = "updated")), eq(10L)))
             .thenReturn(SessionExerciseResponse(1L, 500L, "Bench Press", ExerciseInputType.REPS, true, 90, 0, "updated", emptyList()))
 
-        mockMvc.perform(
-            patch("/v1/session-exercises/1").contentType(MediaType.APPLICATION_JSON).content("""{"notes":"updated"}""")
-        )
-            .andExpect(status().isOk)
+        mockMvc
+            .perform(
+                patch("/v1/session-exercises/1").contentType(MediaType.APPLICATION_JSON).content("""{"notes":"updated"}"""),
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.notes").value("updated"))
     }
 
@@ -63,7 +73,8 @@ class SessionExerciseControllerTest {
     fun `PATCH returns 404 when not owned by the caller`() {
         whenever(workoutSessionService.updateSessionExercise(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("SessionExercise", 1L))
 
-        mockMvc.perform(patch("/v1/session-exercises/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/session-exercises/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 
@@ -89,7 +100,8 @@ class SessionExerciseControllerTest {
     fun `GET previous-performance returns 200 with the prior sets`() {
         whenever(workoutSessionService.findPreviousPerformance(1L, 10L)).thenReturn(listOf(setResponse()))
 
-        mockMvc.perform(get("/v1/session-exercises/1/previous-performance"))
+        mockMvc
+            .perform(get("/v1/session-exercises/1/previous-performance"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].reps").value(8))
     }
@@ -98,7 +110,8 @@ class SessionExerciseControllerTest {
     fun `GET previous-performance returns 200 with an empty list when there's no prior data`() {
         whenever(workoutSessionService.findPreviousPerformance(1L, 10L)).thenReturn(emptyList())
 
-        mockMvc.perform(get("/v1/session-exercises/1/previous-performance"))
+        mockMvc
+            .perform(get("/v1/session-exercises/1/previous-performance"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$").isArray)
             .andExpect(jsonPath("$").isEmpty)
@@ -111,12 +124,12 @@ class SessionExerciseControllerTest {
         val request = SessionSetRequest(sortOrder = 0, setType = SetType.NORMAL, targetReps = 8)
         whenever(workoutSessionService.createSessionSet(eq(1L), eq(request), eq(10L))).thenReturn(setResponse(id = 10L, reps = null))
 
-        mockMvc.perform(
-            post("/v1/session-exercises/1/session-sets")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"sortOrder":0,"setType":"NORMAL","targetReps":8}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/session-exercises/1/session-sets")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"sortOrder":0,"setType":"NORMAL","targetReps":8}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.sessionSetId").value(10))
     }
 
@@ -124,10 +137,11 @@ class SessionExerciseControllerTest {
     fun `POST session-sets returns 404 when the parent exercise isn't owned by the caller`() {
         whenever(workoutSessionService.createSessionSet(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("SessionExercise", 1L))
 
-        mockMvc.perform(
-            post("/v1/session-exercises/1/session-sets")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"sortOrder":0,"setType":"NORMAL"}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/session-exercises/1/session-sets")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"sortOrder":0,"setType":"NORMAL"}"""),
+            ).andExpect(status().isNotFound)
     }
 }

@@ -17,7 +17,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class HomeControllerTest {
-
     private val homeService: HomeService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(HomeController(homeService)).build()
 
@@ -29,16 +28,18 @@ class HomeControllerTest {
 
     @Test
     fun `GET returns 200 with the caller's dashboard`() {
-        val response = HomeResponse(
-            nextWorkout = NextWorkoutResponse(1L, "Push Day", "PPL", 5),
-            trainedDatesThisMonth = emptyList(),
-            workoutsThisMonth = 3,
-            weekStreak = 2,
-            recentWorkouts = emptyList()
-        )
+        val response =
+            HomeResponse(
+                nextWorkout = NextWorkoutResponse(1L, "Push Day", "PPL", 5),
+                trainedDatesThisMonth = emptyList(),
+                workoutsThisMonth = 3,
+                weekStreak = 2,
+                recentWorkouts = emptyList(),
+            )
         whenever(homeService.getHome(10L)).thenReturn(response)
 
-        mockMvc.perform(get("/v1/home"))
+        mockMvc
+            .perform(get("/v1/home"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.nextWorkout.workoutDayName").value("Push Day"))
             .andExpect(jsonPath("$.weekStreak").value(2))
@@ -48,7 +49,8 @@ class HomeControllerTest {
     fun `GET returns nextWorkout null and empty collections for a user with no split yet`() {
         whenever(homeService.getHome(10L)).thenReturn(HomeResponse(null, emptyList(), 0, 0, emptyList()))
 
-        mockMvc.perform(get("/v1/home"))
+        mockMvc
+            .perform(get("/v1/home"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.nextWorkout").doesNotExist())
     }

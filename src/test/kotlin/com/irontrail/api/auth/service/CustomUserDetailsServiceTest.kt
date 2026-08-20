@@ -11,7 +11,6 @@ import org.mockito.kotlin.whenever
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 
 class CustomUserDetailsServiceTest {
-
     private val userRepository: UserRepository = mock()
     private val service = CustomUserDetailsService(userRepository)
 
@@ -43,6 +42,8 @@ class CustomUserDetailsServiceTest {
         assertThrows(UsernameNotFoundException::class.java) {
             service.loadUserByUsername("John@Gmail.com")
         }
-        org.mockito.kotlin.verify(userRepository).findByEmail("John@Gmail.com")
+        org.mockito.kotlin
+            .verify(userRepository)
+            .findByEmail("John@Gmail.com")
     }
 }

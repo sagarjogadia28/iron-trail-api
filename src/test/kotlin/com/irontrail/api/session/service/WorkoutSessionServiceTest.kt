@@ -43,7 +43,6 @@ import java.time.OffsetDateTime
 import java.util.Optional
 
 class WorkoutSessionServiceTest {
-
     private val workoutSessionRepository: WorkoutSessionRepository = mock()
     private val sessionExerciseRepository: SessionExerciseRepository = mock()
     private val sessionSetRepository: SessionSetRepository = mock()
@@ -52,15 +51,16 @@ class WorkoutSessionServiceTest {
     private val exerciseRepository: ExerciseRepository = mock()
     private val ownershipResolver: SessionOwnershipResolver = mock()
 
-    private val service = WorkoutSessionService(
-        workoutSessionRepository,
-        sessionExerciseRepository,
-        sessionSetRepository,
-        workoutDayRepository,
-        splitRepository,
-        exerciseRepository,
-        ownershipResolver
-    )
+    private val service =
+        WorkoutSessionService(
+            workoutSessionRepository,
+            sessionExerciseRepository,
+            sessionSetRepository,
+            workoutDayRepository,
+            splitRepository,
+            exerciseRepository,
+            ownershipResolver,
+        )
 
     // ---- fixtures ----
 
@@ -71,7 +71,7 @@ class WorkoutSessionServiceTest {
         workoutDayId: Long? = null,
         splitNameSnapshot: String? = null,
         workoutDayNameSnapshot: String? = null,
-        startedAt: OffsetDateTime = OffsetDateTime.now()
+        startedAt: OffsetDateTime = OffsetDateTime.now(),
     ) = WorkoutSession(
         ownerId = ownerId,
         workoutDayId = workoutDayId,
@@ -79,7 +79,7 @@ class WorkoutSessionServiceTest {
         workoutDayNameSnapshot = workoutDayNameSnapshot,
         startedAt = startedAt,
         durationSeconds = 0,
-        status = status
+        status = status,
     ).apply { sessionId = id }
 
     private fun sessionExercise(
@@ -88,14 +88,14 @@ class WorkoutSessionServiceTest {
         exerciseNameSnapshot: String = "Bench Press",
         inputTypeSnapshot: ExerciseInputType = ExerciseInputType.REPS,
         sortOrder: Int = 0,
-        parentSession: WorkoutSession = session()
+        parentSession: WorkoutSession = session(),
     ) = SessionExercise(
         exerciseId = exerciseId,
         exerciseNameSnapshot = exerciseNameSnapshot,
         inputTypeSnapshot = inputTypeSnapshot,
         isRepRange = true,
         restDurationSeconds = 90,
-        sortOrder = sortOrder
+        sortOrder = sortOrder,
     ).apply {
         sessionExerciseId = id
         workoutSession = parentSession
@@ -104,11 +104,11 @@ class WorkoutSessionServiceTest {
     private fun sessionSet(
         id: Long = 1L,
         sortOrder: Int = 0,
-        parentExercise: SessionExercise = sessionExercise()
+        parentExercise: SessionExercise = sessionExercise(),
     ) = SessionSet(
         sortOrder = sortOrder,
         setType = SetType.NORMAL,
-        isCompleted = false
+        isCompleted = false,
     ).apply {
         sessionSetId = id
         sessionExercise = parentExercise
@@ -118,7 +118,7 @@ class WorkoutSessionServiceTest {
         id: Long = 100L,
         name: String = "Bench Press",
         inputType: ExerciseInputType = ExerciseInputType.REPS,
-        ownerId: Long? = null
+        ownerId: Long? = null,
     ) = Exercise(
         wgerId = null,
         name = name,
@@ -128,14 +128,21 @@ class WorkoutSessionServiceTest {
         inputType = inputType,
         description = null,
         imageUrl = null,
-        ownerId = ownerId
+        ownerId = ownerId,
     ).apply { exerciseId = id }
 
-    private fun workoutDay(id: Long = 50L, splitId: Long = 5L, name: String = "Push Day", sortOrder: Int = 0) =
-        WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
+    private fun workoutDay(
+        id: Long = 50L,
+        splitId: Long = 5L,
+        name: String = "Push Day",
+        sortOrder: Int = 0,
+    ) = WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder).apply { workoutDayId = id }
 
-    private fun split(id: Long = 5L, ownerId: Long = 10L, name: String = "PPL") =
-        Split(ownerId = ownerId, name = name).apply { splitId = id }
+    private fun split(
+        id: Long = 5L,
+        ownerId: Long = 10L,
+        name: String = "PPL",
+    ) = Split(ownerId = ownerId, name = name).apply { splitId = id }
 
     // ---- findAll / splitName filter ----
 
@@ -413,13 +420,14 @@ class WorkoutSessionServiceTest {
 
     @Test
     fun `update only applies fields present in the patch request, leaving omitted fields unchanged`() {
-        val s = session(id = 1L, status = SessionStatus.ACTIVE).apply {
-            durationSeconds = 500
-            totalVolumeKg = 1000.0
-            completedSets = 3
-            totalSets = 5
-            notes = "original"
-        }
+        val s =
+            session(id = 1L, status = SessionStatus.ACTIVE).apply {
+                durationSeconds = 500
+                totalVolumeKg = 1000.0
+                completedSets = 3
+                totalSets = 5
+                notes = "original"
+            }
         whenever(ownershipResolver.getOwnedWorkoutSession(1L, 10L)).thenReturn(s)
         whenever(sessionExerciseRepository.findByWorkoutSessionIn(listOf(s))).thenReturn(emptyList())
         whenever(sessionSetRepository.findBySessionExerciseIn(any())).thenReturn(emptyList())
@@ -476,11 +484,12 @@ class WorkoutSessionServiceTest {
 
         // SessionExerciseRequest itself has no exerciseNameSnapshot/inputTypeSnapshot field at all -
         // there is no way for a caller to supply one, confirming server-side derivation structurally.
-        val result = service.createSessionExercise(
-            1L,
-            SessionExerciseRequest(exerciseId = 100L, isRepRange = true, restDurationSeconds = 90, sortOrder = 0),
-            10L
-        )
+        val result =
+            service.createSessionExercise(
+                1L,
+                SessionExerciseRequest(exerciseId = 100L, isRepRange = true, restDurationSeconds = 90, sortOrder = 0),
+                10L,
+            )
 
         assertEquals("Back Squat", captor.firstValue.exerciseNameSnapshot)
         assertEquals(ExerciseInputType.REPS, captor.firstValue.inputTypeSnapshot)
@@ -496,7 +505,7 @@ class WorkoutSessionServiceTest {
             service.createSessionExercise(
                 1L,
                 SessionExerciseRequest(exerciseId = 100L, isRepRange = true, restDurationSeconds = 90, sortOrder = 0),
-                10L
+                10L,
             )
         }
         verify(sessionExerciseRepository, never()).save(any())
@@ -510,7 +519,7 @@ class WorkoutSessionServiceTest {
             service.createSessionExercise(
                 1L,
                 SessionExerciseRequest(exerciseId = 100L, isRepRange = true, restDurationSeconds = 90, sortOrder = 0),
-                10L
+                10L,
             )
         }
         verifyNoInteractions(exerciseRepository)
@@ -520,11 +529,12 @@ class WorkoutSessionServiceTest {
 
     @Test
     fun `updateSessionExercise only applies fields present in the patch, leaving others unchanged`() {
-        val se = sessionExercise(id = 1L, sortOrder = 0).apply {
-            restDurationSeconds = 90
-            isRepRange = true
-            notes = "original"
-        }
+        val se =
+            sessionExercise(id = 1L, sortOrder = 0).apply {
+                restDurationSeconds = 90
+                isRepRange = true
+                notes = "original"
+            }
         whenever(ownershipResolver.getOwnedSessionExercise(1L, 10L)).thenReturn(se)
 
         val result = service.updateSessionExercise(1L, SessionExercisePatchRequest(sortOrder = 2), 10L)
@@ -664,7 +674,9 @@ class WorkoutSessionServiceTest {
         service.findPreviousPerformance(1L, 10L)
 
         verify(workoutSessionRepository).findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
-            eq(10L), eq(50L), eq(SessionStatus.COMPLETED)
+            eq(10L),
+            eq(50L),
+            eq(SessionStatus.COMPLETED),
         )
     }
 
@@ -715,7 +727,7 @@ class WorkoutSessionServiceTest {
         service.createSessionSet(
             1L,
             SessionSetRequest(sortOrder = 2, setType = SetType.WARMUP, targetReps = 5, targetRepsMax = 8, targetDurationSeconds = null),
-            10L
+            10L,
         )
 
         assertEquals(2, captor.firstValue.sortOrder)
@@ -763,11 +775,12 @@ class WorkoutSessionServiceTest {
         val set = sessionSet(id = 1L)
         whenever(ownershipResolver.getOwnedSessionSet(1L, 10L)).thenReturn(set)
 
-        val result = service.updateSessionSet(
-            1L,
-            SessionSetPatchRequest(reps = 10, weightKg = 60.0, durationSeconds = null, isCompleted = true),
-            10L
-        )
+        val result =
+            service.updateSessionSet(
+                1L,
+                SessionSetPatchRequest(reps = 10, weightKg = 60.0, durationSeconds = null, isCompleted = true),
+                10L,
+            )
 
         assertEquals(10, result.reps)
         assertEquals(60.0, result.weightKg)

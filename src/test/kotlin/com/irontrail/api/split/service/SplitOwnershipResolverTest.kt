@@ -19,15 +19,18 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 
 class SplitOwnershipResolverTest {
-
     private val splitRepository: SplitRepository = mock()
     private val workoutDayRepository: WorkoutDayRepository = mock()
     private val templateExerciseRepository: TemplateExerciseRepository = mock()
     private val templateSetRepository: TemplateSetRepository = mock()
 
-    private val resolver = SplitOwnershipResolver(
-        splitRepository, workoutDayRepository, templateExerciseRepository, templateSetRepository
-    )
+    private val resolver =
+        SplitOwnershipResolver(
+            splitRepository,
+            workoutDayRepository,
+            templateExerciseRepository,
+            templateSetRepository,
+        )
 
     // ---- getOwnedSplit ----
 
@@ -119,9 +122,10 @@ class SplitOwnershipResolverTest {
     fun `getOwnedTemplateExercise throws NotFoundException when no template exercise exists with that id`() {
         whenever(templateExerciseRepository.findOwnedByTemplateExerciseId(999L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedTemplateExercise(999L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedTemplateExercise(999L, 10L)
+            }
 
         assertEquals("TemplateExercise not found: 999", ex.message)
     }
@@ -130,9 +134,10 @@ class SplitOwnershipResolverTest {
     fun `getOwnedTemplateExercise throws the same NotFoundException when owned by someone else`() {
         whenever(templateExerciseRepository.findOwnedByTemplateExerciseId(200L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedTemplateExercise(200L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedTemplateExercise(200L, 10L)
+            }
 
         assertEquals("TemplateExercise not found: 200", ex.message)
     }
@@ -153,9 +158,10 @@ class SplitOwnershipResolverTest {
     fun `getOwnedTemplateSet throws NotFoundException when no template set exists with that id`() {
         whenever(templateSetRepository.findOwnedByTemplateSetId(999L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedTemplateSet(999L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedTemplateSet(999L, 10L)
+            }
 
         assertEquals("TemplateSet not found: 999", ex.message)
     }
@@ -164,9 +170,10 @@ class SplitOwnershipResolverTest {
     fun `getOwnedTemplateSet throws the same NotFoundException when owned by someone else`() {
         whenever(templateSetRepository.findOwnedByTemplateSetId(300L, 10L)).thenReturn(null)
 
-        val ex = assertThrows(NotFoundException::class.java) {
-            resolver.getOwnedTemplateSet(300L, 10L)
-        }
+        val ex =
+            assertThrows(NotFoundException::class.java) {
+                resolver.getOwnedTemplateSet(300L, 10L)
+            }
 
         assertEquals("TemplateSet not found: 300", ex.message)
     }

@@ -14,10 +14,10 @@ interface TemplateSetRepository : JpaRepository<TemplateSet, Long> {
          SELECT ts FROM TemplateSet ts, WorkoutDay wd, Split s 
          WHERE ts.templateSetId = :templateSetId AND ts.templateExercise.workoutDayId = wd.workoutDayId 
          AND wd.splitId = s.splitId AND s.ownerId = :ownerId
-     """
+     """,
     )
     fun findOwnedByTemplateSetId(
         @Param("templateSetId") templateSetId: Long,
-        @Param("ownerId") ownerId: Long
+        @Param("ownerId") ownerId: Long,
     ): TemplateSet?
 }

@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 
 class TemplateSetRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -29,32 +28,36 @@ class TemplateSetRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun persistSplit(ownerId: Long): Split =
-        entityManager.persistAndFlush(Split(ownerId = ownerId, name = "PPL"))
+    private fun persistSplit(ownerId: Long): Split = entityManager.persistAndFlush(Split(ownerId = ownerId, name = "PPL"))
 
     private fun persistDay(splitId: Long): WorkoutDay =
         entityManager.persistAndFlush(WorkoutDay(splitId = splitId, name = "Push Day", sortOrder = 0))
 
-    private fun persistExercise(): Long = entityManager.persistAndFlush(
-        Exercise(
-            wgerId = null,
-            name = "Bench Press",
-            primaryMuscleGroup = MuscleGroup.CHEST,
-            secondaryMuscleGroups = emptyList(),
-            equipment = Equipment.BARBELL,
-            inputType = ExerciseInputType.REPS,
-            description = null,
-            imageUrl = null,
-            ownerId = null
-        )
-    ).exerciseId
+    private fun persistExercise(): Long =
+        entityManager
+            .persistAndFlush(
+                Exercise(
+                    wgerId = null,
+                    name = "Bench Press",
+                    primaryMuscleGroup = MuscleGroup.CHEST,
+                    secondaryMuscleGroups = emptyList(),
+                    equipment = Equipment.BARBELL,
+                    inputType = ExerciseInputType.REPS,
+                    description = null,
+                    imageUrl = null,
+                    ownerId = null,
+                ),
+            ).exerciseId
 
     private fun persistTemplateExercise(workoutDayId: Long): TemplateExercise =
         entityManager.persistAndFlush(TemplateExercise(workoutDayId = workoutDayId, exerciseId = persistExercise(), sortOrder = 0))
 
-    private fun persistTemplateSet(parent: TemplateExercise, targetReps: Int? = 8): TemplateSet =
+    private fun persistTemplateSet(
+        parent: TemplateExercise,
+        targetReps: Int? = 8,
+    ): TemplateSet =
         entityManager.persistAndFlush(
-            TemplateSet(sortOrder = 0, targetReps = targetReps, setType = SetType.NORMAL).apply { templateExercise = parent }
+            TemplateSet(sortOrder = 0, targetReps = targetReps, setType = SetType.NORMAL).apply { templateExercise = parent },
         )
 
     // ---- findByTemplateExerciseIn ----

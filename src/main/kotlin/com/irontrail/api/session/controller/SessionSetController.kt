@@ -16,17 +16,20 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/session-sets")
 class SessionSetController(
-    private val workoutSessionService: WorkoutSessionService
+    private val workoutSessionService: WorkoutSessionService,
 ) {
     @PatchMapping("/{sessionSetId}")
     fun update(
         @PathVariable sessionSetId: Long,
         @Valid @RequestBody request: SessionSetPatchRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): SessionSetResponse = workoutSessionService.updateSessionSet(sessionSetId, request, userId)
 
     @DeleteMapping("/{sessionSetId}")
-    fun delete(@PathVariable sessionSetId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable sessionSetId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         workoutSessionService.deleteSessionSet(sessionSetId, userId)
         return ResponseEntity.noContent().build()
     }

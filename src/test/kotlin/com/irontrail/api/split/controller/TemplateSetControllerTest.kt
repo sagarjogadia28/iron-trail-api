@@ -26,7 +26,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class TemplateSetControllerTest {
-
     private val splitService: SplitService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(TemplateSetController(splitService)).build()
 
@@ -43,10 +42,10 @@ class TemplateSetControllerTest {
         whenever(splitService.updateTemplateSet(eq(1L), eq(TemplateSetPatchRequest(setType = SetType.WARMUP)), eq(10L)))
             .thenReturn(TemplateSetResponse(1L, 0, 8, null, null, SetType.WARMUP))
 
-        mockMvc.perform(
-            patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("""{"setType":"WARMUP"}""")
-        )
-            .andExpect(status().isOk)
+        mockMvc
+            .perform(
+                patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("""{"setType":"WARMUP"}"""),
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.setType").value("WARMUP"))
     }
 
@@ -55,16 +54,18 @@ class TemplateSetControllerTest {
         whenever(splitService.updateTemplateSet(eq(1L), any(), eq(10L)))
             .thenThrow(BadRequestException("targetReps must not exceed targetRepsMax"))
 
-        mockMvc.perform(
-            patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("""{"targetReps":20}""")
-        ).andExpect(status().isBadRequest)
+        mockMvc
+            .perform(
+                patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("""{"targetReps":20}"""),
+            ).andExpect(status().isBadRequest)
     }
 
     @Test
     fun `PATCH returns 404 when not owned by the caller`() {
         whenever(splitService.updateTemplateSet(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("TemplateSet", 1L))
 
-        mockMvc.perform(patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/template-sets/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 

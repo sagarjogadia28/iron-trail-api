@@ -13,26 +13,20 @@ import java.time.OffsetDateTime
 @Table(name = "user_profile")
 class UserProfile(
     var name: String,
-
     @Enumerated(EnumType.STRING)
     var gender: Gender,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "weight_unit")
     var weightUnit: WeightUnit,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "measurement_unit")
     var measurementUnit: MeasurementUnit,
-
     @Column(name = "rest_timer_notifications_enabled")
     var restTimerNotificationsEnabled: Boolean,
-
     @Column(name = "profile_image_path")
     var profileImagePath: String?,
-
     @Column(name = "active_split_id")
-    var activeSplitId: Long? = null
+    var activeSplitId: Long? = null,
 ) {
     @Id
     @Column(name = "user_id")

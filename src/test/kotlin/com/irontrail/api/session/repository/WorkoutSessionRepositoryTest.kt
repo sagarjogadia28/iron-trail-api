@@ -19,7 +19,6 @@ import org.springframework.dao.DataIntegrityViolationException
 import java.time.OffsetDateTime
 
 class WorkoutSessionRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -44,16 +43,17 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         ownerId: Long,
         status: SessionStatus = SessionStatus.COMPLETED,
         workoutDayId: Long? = null,
-        startedAt: OffsetDateTime = OffsetDateTime.now()
-    ): WorkoutSession = entityManager.persistAndFlush(
-        WorkoutSession(
-            ownerId = ownerId,
-            workoutDayId = workoutDayId,
-            startedAt = startedAt,
-            durationSeconds = 1800,
-            status = status
+        startedAt: OffsetDateTime = OffsetDateTime.now(),
+    ): WorkoutSession =
+        entityManager.persistAndFlush(
+            WorkoutSession(
+                ownerId = ownerId,
+                workoutDayId = workoutDayId,
+                startedAt = startedAt,
+                durationSeconds = 1800,
+                status = status,
+            ),
         )
-    )
 
     // ---- findByOwnerId ----
 
@@ -112,9 +112,11 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val owner = persistUser()
         val session = persistSession(owner, status = SessionStatus.PAUSED)
 
-        val result = workoutSessionRepository.findByOwnerIdAndStatusIn(
-            owner, listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED)
-        )
+        val result =
+            workoutSessionRepository.findByOwnerIdAndStatusIn(
+                owner,
+                listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED),
+            )
 
         assertEquals(session.sessionId, result?.sessionId)
     }
@@ -124,9 +126,11 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val owner = persistUser()
         persistSession(owner, status = SessionStatus.COMPLETED)
 
-        val result = workoutSessionRepository.findByOwnerIdAndStatusIn(
-            owner, listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED)
-        )
+        val result =
+            workoutSessionRepository.findByOwnerIdAndStatusIn(
+                owner,
+                listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED),
+            )
 
         assertNull(result)
     }
@@ -147,8 +151,8 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
                     ownerId = owner,
                     startedAt = OffsetDateTime.now(),
                     durationSeconds = 0,
-                    status = SessionStatus.PAUSED
-                )
+                    status = SessionStatus.PAUSED,
+                ),
             )
         }
     }
@@ -175,9 +179,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         persistSession(owner, SessionStatus.COMPLETED, dayId, now.minusDays(1))
         persistSession(owner, SessionStatus.COMPLETED, dayId, now.minusDays(2))
 
-        val result = workoutSessionRepository.findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
-            owner, dayId, SessionStatus.COMPLETED
-        )
+        val result =
+            workoutSessionRepository.findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
+                owner,
+                dayId,
+                SessionStatus.COMPLETED,
+            )
 
         assertEquals(2, result.size)
         assertTrue(result[0].startedAt.isAfter(result[1].startedAt))
@@ -190,9 +197,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val dayB = persistWorkoutDay(owner)
         persistSession(owner, SessionStatus.COMPLETED, dayB)
 
-        val result = workoutSessionRepository.findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
-            owner, dayA, SessionStatus.COMPLETED
-        )
+        val result =
+            workoutSessionRepository.findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(
+                owner,
+                dayA,
+                SessionStatus.COMPLETED,
+            )
 
         assertTrue(result.isEmpty())
     }
@@ -205,9 +215,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val now = OffsetDateTime.now()
         persistSession(owner, SessionStatus.COMPLETED, startedAt = now.minusDays(10))
 
-        val result = workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(
-            owner, SessionStatus.COMPLETED, now.minusDays(5)
-        )
+        val result =
+            workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(
+                owner,
+                SessionStatus.COMPLETED,
+                now.minusDays(5),
+            )
 
         assertTrue(result.isEmpty())
     }
@@ -218,9 +231,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val now = OffsetDateTime.now()
         val recent = persistSession(owner, SessionStatus.COMPLETED, startedAt = now.minusDays(1))
 
-        val result = workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(
-            owner, SessionStatus.COMPLETED, now.minusDays(5)
-        )
+        val result =
+            workoutSessionRepository.findByOwnerIdAndStatusAndStartedAtAfter(
+                owner,
+                SessionStatus.COMPLETED,
+                now.minusDays(5),
+            )
 
         assertEquals(listOf(recent.sessionId), result.map { it.sessionId })
     }
@@ -250,9 +266,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         persistSession(owner, SessionStatus.COMPLETED, dayA, now.minusDays(5))
         val mostRecent = persistSession(owner, SessionStatus.COMPLETED, dayB, now.minusDays(1))
 
-        val result = workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-            owner, listOf(dayA, dayB), SessionStatus.COMPLETED
-        )
+        val result =
+            workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
+                owner,
+                listOf(dayA, dayB),
+                SessionStatus.COMPLETED,
+            )
 
         assertEquals(mostRecent.sessionId, result?.sessionId)
     }
@@ -262,9 +281,12 @@ class WorkoutSessionRepositoryTest : RepositoryTestBase() {
         val owner = persistUser()
         val dayA = persistWorkoutDay(owner)
 
-        val result = workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-            owner, listOf(dayA), SessionStatus.COMPLETED
-        )
+        val result =
+            workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
+                owner,
+                listOf(dayA),
+                SessionStatus.COMPLETED,
+            )
 
         assertNull(result)
     }

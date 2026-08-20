@@ -4,5 +4,5 @@ enum class SetType {
     NORMAL,
     WARMUP,
     DROP_SET,
-    FAILURE
+    FAILURE,
 }

@@ -7,7 +7,7 @@ data class NextWorkoutResponse(
     val workoutDayId: Long,
     val workoutDayName: String,
     val splitName: String,
-    val exerciseCount: Int
+    val exerciseCount: Int,
 )
 
 data class HomeResponse(
@@ -15,5 +15,5 @@ data class HomeResponse(
     val trainedDatesThisMonth: List<LocalDate>,
     val workoutsThisMonth: Int,
     val weekStreak: Int,
-    val recentWorkouts: List<WorkoutSessionResponse>
+    val recentWorkouts: List<WorkoutSessionResponse>,
 )

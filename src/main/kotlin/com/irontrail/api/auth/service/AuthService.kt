@@ -18,39 +18,39 @@ class AuthService(
     private val userRepository: UserRepository,
     private val passwordEncoder: PasswordEncoder,
     private val authenticationManager: AuthenticationManager,
-    private val jwtService: JwtService
+    private val jwtService: JwtService,
 ) {
-
-    fun register(request: RegisterRequest) : AuthResponse {
+    fun register(request: RegisterRequest): AuthResponse {
         val email = request.email.trim().lowercase()
         if (userRepository.findByEmail(email) != null) {
             throw EmailAlreadyInUseException(email)
         }
 
-        val user = User(
-            email = email,
-            passwordHash = passwordEncoder.encode(request.password)!!
-        )
+        val user =
+            User(
+                email = email,
+                passwordHash = passwordEncoder.encode(request.password)!!,
+            )
         userRepository.save(user)
         return AuthResponse(
             accessToken = jwtService.generateToken(user.userId),
-            expiresIn = jwtService.expiresInSeconds
+            expiresIn = jwtService.expiresInSeconds,
         )
     }
 
-    fun login(request: LoginRequest) : AuthResponse {
+    fun login(request: LoginRequest): AuthResponse {
         val email = request.email.trim().lowercase()
         authenticationManager.authenticate(
-            UsernamePasswordAuthenticationToken(email, request.password)
+            UsernamePasswordAuthenticationToken(email, request.password),
         )
 
-        val user = userRepository.findByEmail(email)
-            ?: throw IllegalStateException("Authenticated user not found: $email")
+        val user =
+            userRepository.findByEmail(email)
+                ?: throw IllegalStateException("Authenticated user not found: $email")
 
         return AuthResponse(
             accessToken = jwtService.generateToken(user.userId),
-            expiresIn = jwtService.expiresInSeconds
+            expiresIn = jwtService.expiresInSeconds,
         )
     }
-
 }

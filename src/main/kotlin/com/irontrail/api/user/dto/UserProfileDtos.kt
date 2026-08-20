@@ -13,15 +13,12 @@ data class UserProfileRequest(
     @field:NotBlank
     @field:Size(min = 2, max = 30)
     val name: String,
-
     @field:NotNull
     val gender: Gender,
-
     @field:NotNull
     val weightUnit: WeightUnit,
-
     @field:NotNull
-    val measurementUnit: MeasurementUnit
+    val measurementUnit: MeasurementUnit,
 )
 
 data class UserProfilePatchRequest(
@@ -32,7 +29,7 @@ data class UserProfilePatchRequest(
     val weightUnit: WeightUnit? = null,
     val measurementUnit: MeasurementUnit? = null,
     val restTimerNotificationsEnabled: Boolean? = null,
-    val activeSplitId: Long? = null
+    val activeSplitId: Long? = null,
 )
 
 data class UserProfileResponse(
@@ -43,5 +40,5 @@ data class UserProfileResponse(
     val measurementUnit: MeasurementUnit,
     val restTimerNotificationsEnabled: Boolean,
     val activeSplitId: Long?,
-    val createdAt: OffsetDateTime
+    val createdAt: OffsetDateTime,
 )

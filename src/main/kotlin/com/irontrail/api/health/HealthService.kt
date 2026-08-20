@@ -6,6 +6,5 @@ enum class HealthStatus { UP, DOWN }
 
 @Service
 class HealthService {
-
     fun status(): HealthStatus = HealthStatus.UP
 }

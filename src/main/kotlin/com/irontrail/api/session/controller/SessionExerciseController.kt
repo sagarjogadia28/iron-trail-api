@@ -21,31 +21,35 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/session-exercises")
 class SessionExerciseController(
-    private val workoutSessionService: WorkoutSessionService
+    private val workoutSessionService: WorkoutSessionService,
 ) {
     @PatchMapping("/{sessionExerciseId}")
     fun update(
         @PathVariable sessionExerciseId: Long,
         @Valid @RequestBody request: SessionExercisePatchRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): SessionExerciseResponse = workoutSessionService.updateSessionExercise(sessionExerciseId, request, userId)
 
     @DeleteMapping("/{sessionExerciseId}")
-    fun delete(@PathVariable sessionExerciseId: Long, @AuthenticationPrincipal userId: Long): ResponseEntity<Void> {
+    fun delete(
+        @PathVariable sessionExerciseId: Long,
+        @AuthenticationPrincipal userId: Long,
+    ): ResponseEntity<Void> {
         workoutSessionService.deleteSessionExercise(sessionExerciseId, userId)
         return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/{sessionExerciseId}/previous-performance")
     fun findPreviousPerformance(
-        @PathVariable sessionExerciseId: Long, @AuthenticationPrincipal userId: Long
+        @PathVariable sessionExerciseId: Long,
+        @AuthenticationPrincipal userId: Long,
     ): List<SessionSetResponse> = workoutSessionService.findPreviousPerformance(sessionExerciseId, userId)
 
     @PostMapping("/{sessionExerciseId}/session-sets")
     fun createSessionSet(
         @PathVariable sessionExerciseId: Long,
         @Valid @RequestBody request: SessionSetRequest,
-        @AuthenticationPrincipal userId: Long
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<SessionSetResponse> {
         val created = workoutSessionService.createSessionSet(sessionExerciseId, request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)

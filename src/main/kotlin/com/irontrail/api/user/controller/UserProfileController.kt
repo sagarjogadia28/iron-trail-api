@@ -18,15 +18,17 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/v1/profile")
 class UserProfileController(
-    private val userProfileService: UserProfileService
+    private val userProfileService: UserProfileService,
 ) {
     @GetMapping
-    fun findByUserId(@AuthenticationPrincipal userId: Long): UserProfileResponse =
-        userProfileService.findByUserId(userId)
+    fun findByUserId(
+        @AuthenticationPrincipal userId: Long,
+    ): UserProfileResponse = userProfileService.findByUserId(userId)
 
     @PostMapping
     fun create(
-        @Valid @RequestBody request: UserProfileRequest, @AuthenticationPrincipal userId: Long
+        @Valid @RequestBody request: UserProfileRequest,
+        @AuthenticationPrincipal userId: Long,
     ): ResponseEntity<UserProfileResponse> {
         val created = userProfileService.create(request, userId)
         return ResponseEntity.status(HttpStatus.CREATED).body(created)
@@ -34,6 +36,7 @@ class UserProfileController(
 
     @PatchMapping
     fun update(
-        @Valid @RequestBody request: UserProfilePatchRequest, @AuthenticationPrincipal userId: Long
+        @Valid @RequestBody request: UserProfilePatchRequest,
+        @AuthenticationPrincipal userId: Long,
     ): UserProfileResponse = userProfileService.update(request, userId)
 }

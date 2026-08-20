@@ -16,7 +16,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 
 class JwtAuthenticationFilterTest {
-
     private val jwtService: JwtService = mock()
     private val filter = JwtAuthenticationFilter(jwtService)
     private val request: HttpServletRequest = mock()

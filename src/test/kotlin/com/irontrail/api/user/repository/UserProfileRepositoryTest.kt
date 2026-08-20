@@ -18,7 +18,6 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 // wrong type were still in place, this file wouldn't compile - save()/findById() below require the
 // declared generic type to actually be UserProfile.
 class UserProfileRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -28,13 +27,16 @@ class UserProfileRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun profile(userId: Long, name: String = "Sagar") = UserProfile(
+    private fun profile(
+        userId: Long,
+        name: String = "Sagar",
+    ) = UserProfile(
         name = name,
         gender = Gender.MALE,
         weightUnit = WeightUnit.KG,
         measurementUnit = MeasurementUnit.METRIC,
         restTimerNotificationsEnabled = true,
-        profileImagePath = null
+        profileImagePath = null,
     ).apply { this.userId = userId }
 
     @Test

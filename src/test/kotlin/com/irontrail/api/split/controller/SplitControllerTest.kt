@@ -30,7 +30,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class SplitControllerTest {
-
     private val splitService: SplitService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(SplitController(splitService)).build()
 
@@ -40,7 +39,10 @@ class SplitControllerTest {
     @AfterEach
     fun clearAuth() = clearAuthentication()
 
-    private fun detail(id: Long = 1L, name: String = "PPL") = SplitDetailResponse(id, name, emptyList())
+    private fun detail(
+        id: Long = 1L,
+        name: String = "PPL",
+    ) = SplitDetailResponse(id, name, emptyList())
 
     // ---- findAll ----
 
@@ -48,7 +50,8 @@ class SplitControllerTest {
     fun `GET list returns 200 with the caller's splits`() {
         whenever(splitService.findAll(10L)).thenReturn(listOf(SplitResponse(1L, "PPL", 3, 12)))
 
-        mockMvc.perform(get("/v1/splits"))
+        mockMvc
+            .perform(get("/v1/splits"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].name").value("PPL"))
     }
@@ -59,7 +62,8 @@ class SplitControllerTest {
     fun `GET by id returns 200 with the nested tree`() {
         whenever(splitService.findById(1L, 10L)).thenReturn(detail())
 
-        mockMvc.perform(get("/v1/splits/1"))
+        mockMvc
+            .perform(get("/v1/splits/1"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.splitId").value(1))
     }
@@ -77,16 +81,17 @@ class SplitControllerTest {
     fun `POST with a valid body returns 201`() {
         whenever(splitService.create(SplitRequest("New Split"), 10L)).thenReturn(detail(name = "New Split"))
 
-        mockMvc.perform(
-            post("/v1/splits").contentType(MediaType.APPLICATION_JSON).content("""{"name":"New Split"}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/splits").contentType(MediaType.APPLICATION_JSON).content("""{"name":"New Split"}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.name").value("New Split"))
     }
 
     @Test
     fun `POST with a blank name returns 400 and never calls the service`() {
-        mockMvc.perform(post("/v1/splits").contentType(MediaType.APPLICATION_JSON).content("""{"name":""}"""))
+        mockMvc
+            .perform(post("/v1/splits").contentType(MediaType.APPLICATION_JSON).content("""{"name":""}"""))
             .andExpect(status().isBadRequest)
 
         verify(splitService, never()).create(any(), any())
@@ -99,7 +104,8 @@ class SplitControllerTest {
         whenever(splitService.update(eq(1L), eq(SplitPatchRequest(name = "Renamed")), eq(10L)))
             .thenReturn(detail(name = "Renamed"))
 
-        mockMvc.perform(patch("/v1/splits/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Renamed"}"""))
+        mockMvc
+            .perform(patch("/v1/splits/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Renamed"}"""))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.name").value("Renamed"))
     }
@@ -108,7 +114,8 @@ class SplitControllerTest {
     fun `PATCH returns 404 when not owned by the caller`() {
         whenever(splitService.update(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("Split", 1L))
 
-        mockMvc.perform(patch("/v1/splits/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/splits/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 
@@ -123,7 +130,10 @@ class SplitControllerTest {
 
     @Test
     fun `DELETE returns 404 when not owned by the caller`() {
-        org.mockito.kotlin.doThrow(NotFoundException("Split", 1L)).whenever(splitService).delete(1L, 10L)
+        org.mockito.kotlin
+            .doThrow(NotFoundException("Split", 1L))
+            .whenever(splitService)
+            .delete(1L, 10L)
 
         mockMvc.perform(delete("/v1/splits/1")).andExpect(status().isNotFound)
     }
@@ -135,12 +145,12 @@ class SplitControllerTest {
         whenever(splitService.duplicateSplit(eq(1L), eq(SplitRequest("PPL (Copy)")), eq(10L)))
             .thenReturn(detail(id = 2L, name = "PPL (Copy)"))
 
-        mockMvc.perform(
-            post("/v1/splits/1/duplicate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"PPL (Copy)"}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/splits/1/duplicate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"PPL (Copy)"}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.splitId").value(2))
     }
 
@@ -148,9 +158,10 @@ class SplitControllerTest {
     fun `POST duplicate returns 404 when the source split isn't owned by the caller`() {
         whenever(splitService.duplicateSplit(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("Split", 1L))
 
-        mockMvc.perform(
-            post("/v1/splits/1/duplicate").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Copy"}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/splits/1/duplicate").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Copy"}"""),
+            ).andExpect(status().isNotFound)
     }
 
     // ---- createWorkoutDay ----
@@ -160,22 +171,23 @@ class SplitControllerTest {
         whenever(splitService.createWorkoutDay(eq(1L), eq(WorkoutDayRequest("Push", 0)), eq(10L)))
             .thenReturn(WorkoutDayResponse(10L, "Push", 0, emptyList()))
 
-        mockMvc.perform(
-            post("/v1/splits/1/workout-days")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Push","sortOrder":0}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/splits/1/workout-days")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Push","sortOrder":0}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.workoutDayId").value(10))
     }
 
     @Test
     fun `POST workout-days with a blank name returns 400 and never calls the service`() {
-        mockMvc.perform(
-            post("/v1/splits/1/workout-days")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"","sortOrder":0}""")
-        ).andExpect(status().isBadRequest)
+        mockMvc
+            .perform(
+                post("/v1/splits/1/workout-days")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"","sortOrder":0}"""),
+            ).andExpect(status().isBadRequest)
 
         verify(splitService, never()).createWorkoutDay(any(), any(), any())
     }
@@ -184,10 +196,11 @@ class SplitControllerTest {
     fun `POST workout-days returns 404 when the parent split isn't owned by the caller`() {
         whenever(splitService.createWorkoutDay(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("Split", 1L))
 
-        mockMvc.perform(
-            post("/v1/splits/1/workout-days")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Push","sortOrder":0}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/splits/1/workout-days")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Push","sortOrder":0}"""),
+            ).andExpect(status().isNotFound)
     }
 }

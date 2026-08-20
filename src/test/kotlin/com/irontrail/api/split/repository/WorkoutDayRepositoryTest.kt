@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 
 class WorkoutDayRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -22,11 +21,16 @@ class WorkoutDayRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun persistSplit(ownerId: Long, name: String = "PPL"): Split =
-        entityManager.persistAndFlush(Split(ownerId = ownerId, name = name))
+    private fun persistSplit(
+        ownerId: Long,
+        name: String = "PPL",
+    ): Split = entityManager.persistAndFlush(Split(ownerId = ownerId, name = name))
 
-    private fun persistDay(splitId: Long, name: String = "Push Day", sortOrder: Int = 0): WorkoutDay =
-        entityManager.persistAndFlush(WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder))
+    private fun persistDay(
+        splitId: Long,
+        name: String = "Push Day",
+        sortOrder: Int = 0,
+    ): WorkoutDay = entityManager.persistAndFlush(WorkoutDay(splitId = splitId, name = name, sortOrder = sortOrder))
 
     // ---- findBySplitIdIn ----
 

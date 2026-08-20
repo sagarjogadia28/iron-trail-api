@@ -14,9 +14,8 @@ import java.time.OffsetDateTime
 class User(
     @Column(unique = true)
     var email: String,
-
     @Column(name = "password_hash")
-    var passwordHash: String
+    var passwordHash: String,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

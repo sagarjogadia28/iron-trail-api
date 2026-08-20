@@ -12,6 +12,6 @@ interface SessionSetRepository : JpaRepository<SessionSet, Long> {
     @Query("SELECT ss FROM SessionSet ss WHERE ss.sessionSetId = :sessionSetId AND ss.sessionExercise.workoutSession.ownerId = :ownerId")
     fun findOwnedBySessionSetId(
         @Param("sessionSetId") sessionSetId: Long,
-        @Param("ownerId") ownerId: Long
+        @Param("ownerId") ownerId: Long,
     ): SessionSet?
 }

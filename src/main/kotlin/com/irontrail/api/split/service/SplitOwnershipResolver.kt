@@ -16,26 +16,37 @@ class SplitOwnershipResolver(
     private val splitRepository: SplitRepository,
     private val workoutDayRepository: WorkoutDayRepository,
     private val templateExerciseRepository: TemplateExerciseRepository,
-    private val templateSetRepository: TemplateSetRepository
+    private val templateSetRepository: TemplateSetRepository,
 ) {
-    fun getOwnedSplit(splitId: Long, userId: Long): Split =
-        splitRepository.findBySplitIdAndOwnerId(splitId, userId) ?: throw NotFoundException("Split", splitId)
+    fun getOwnedSplit(
+        splitId: Long,
+        userId: Long,
+    ): Split = splitRepository.findBySplitIdAndOwnerId(splitId, userId) ?: throw NotFoundException("Split", splitId)
 
-    fun getOwnedWorkoutDay(workoutDayId: Long, userId: Long): WorkoutDay =
+    fun getOwnedWorkoutDay(
+        workoutDayId: Long,
+        userId: Long,
+    ): WorkoutDay =
         workoutDayRepository.findOwnedByWorkoutDayId(workoutDayId, userId) ?: throw NotFoundException(
             "WorkoutDay",
-            workoutDayId
+            workoutDayId,
         )
 
-    fun getOwnedTemplateExercise(templateExerciseId: Long, userId: Long): TemplateExercise =
+    fun getOwnedTemplateExercise(
+        templateExerciseId: Long,
+        userId: Long,
+    ): TemplateExercise =
         templateExerciseRepository.findOwnedByTemplateExerciseId(templateExerciseId, userId) ?: throw NotFoundException(
             "TemplateExercise",
-            templateExerciseId
+            templateExerciseId,
         )
 
-    fun getOwnedTemplateSet(templateSetId: Long, userId: Long): TemplateSet =
+    fun getOwnedTemplateSet(
+        templateSetId: Long,
+        userId: Long,
+    ): TemplateSet =
         templateSetRepository.findOwnedByTemplateSetId(templateSetId, userId) ?: throw NotFoundException(
             "TemplateSet",
-            templateSetId
+            templateSetId,
         )
 }

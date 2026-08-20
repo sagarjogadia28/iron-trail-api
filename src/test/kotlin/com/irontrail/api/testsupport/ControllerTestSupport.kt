@@ -17,9 +17,12 @@ import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder
 // filter chain that isn't there. It cannot exercise the "no token -> 403" cross-cutting rule itself -
 // that's SecurityConfig's job, already covered end-to-end via curl, not this controller's.
 fun standaloneMvcBuilder(controller: Any): StandaloneMockMvcBuilder =
-    MockMvcBuilders.standaloneSetup(controller)
-        .setControllerAdvice(com.irontrail.api.common.GlobalExceptionHandler())
-        .setCustomArgumentResolvers(AuthenticationPrincipalArgumentResolver())
+    MockMvcBuilders
+        .standaloneSetup(controller)
+        .setControllerAdvice(
+            com.irontrail.api.common
+                .GlobalExceptionHandler(),
+        ).setCustomArgumentResolvers(AuthenticationPrincipalArgumentResolver())
 
 fun authenticateAs(userId: Long) {
     SecurityContextHolder.getContext().authentication =

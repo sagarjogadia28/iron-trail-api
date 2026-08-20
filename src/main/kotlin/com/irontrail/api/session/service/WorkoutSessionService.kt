@@ -37,28 +37,38 @@ class WorkoutSessionService(
     private val workoutDayRepository: WorkoutDayRepository,
     private val splitRepository: SplitRepository,
     private val exerciseRepository: ExerciseRepository,
-    private val ownershipResolver: SessionOwnershipResolver
+    private val ownershipResolver: SessionOwnershipResolver,
 ) {
     private val activeSessionStatuses = listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED)
 
-
-    fun findAll(userId: Long, splitName: String? = null): List<WorkoutSessionResponse> =
-        workoutSessionRepository.findByOwnerId(userId)
+    fun findAll(
+        userId: Long,
+        splitName: String? = null,
+    ): List<WorkoutSessionResponse> =
+        workoutSessionRepository
+            .findByOwnerId(userId)
             .filter { splitName == null || it.splitNameSnapshot == splitName }
             .sortedByDescending { it.startedAt }
             .map { it.toWorkoutSessionResponse() }
 
     fun findActive(userId: Long): WorkoutSessionResponse? =
-        workoutSessionRepository.findByOwnerIdAndStatusIn(userId, listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED))
+        workoutSessionRepository
+            .findByOwnerIdAndStatusIn(userId, listOf(SessionStatus.ACTIVE, SessionStatus.PAUSED))
             ?.toWorkoutSessionResponse()
 
-    fun findById(sessionId: Long, userId: Long): WorkoutSessionDetailResponse {
+    fun findById(
+        sessionId: Long,
+        userId: Long,
+    ): WorkoutSessionDetailResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
         val sessionExercises = buildSessionExerciseTree(listOf(session)).getValue(session.sessionId)
         return session.toDetailResponse(sessionExercises)
     }
 
-    fun create(request: WorkoutSessionRequest, userId: Long): WorkoutSessionDetailResponse {
+    fun create(
+        request: WorkoutSessionRequest,
+        userId: Long,
+    ): WorkoutSessionDetailResponse {
         if (workoutSessionRepository.findByOwnerIdAndStatusIn(userId, activeSessionStatuses) != null) {
             throw ConflictException("An active session already exists")
         }
@@ -66,37 +76,47 @@ class WorkoutSessionService(
         var splitNameSnapshot: String? = null
         var workoutDayNameSnapshot: String? = null
         if (request.workoutDayId != null) {
-            val workoutDay = workoutDayRepository.findOwnedByWorkoutDayId(request.workoutDayId, userId)
-                ?: throw NotFoundException("WorkoutDay", request.workoutDayId)
+            val workoutDay =
+                workoutDayRepository.findOwnedByWorkoutDayId(request.workoutDayId, userId)
+                    ?: throw NotFoundException("WorkoutDay", request.workoutDayId)
             val split = splitRepository.findById(workoutDay.splitId).orElseThrow { NotFoundException("Split", workoutDay.splitId) }
             workoutDayNameSnapshot = workoutDay.name
             splitNameSnapshot = split.name
         }
 
-        val saved = workoutSessionRepository.save(
-            WorkoutSession(
-                ownerId = userId,
-                workoutDayId = request.workoutDayId,
-                splitNameSnapshot = splitNameSnapshot,
-                workoutDayNameSnapshot = workoutDayNameSnapshot,
-                startedAt = OffsetDateTime.now(),
-                durationSeconds = 0,
-                notes = request.notes,
-                status = SessionStatus.ACTIVE
+        val saved =
+            workoutSessionRepository.save(
+                WorkoutSession(
+                    ownerId = userId,
+                    workoutDayId = request.workoutDayId,
+                    splitNameSnapshot = splitNameSnapshot,
+                    workoutDayNameSnapshot = workoutDayNameSnapshot,
+                    startedAt = OffsetDateTime.now(),
+                    durationSeconds = 0,
+                    notes = request.notes,
+                    status = SessionStatus.ACTIVE,
+                ),
             )
-        )
         return saved.toDetailResponse(emptyList())
     }
 
-    fun update(sessionId: Long, request: WorkoutSessionPatchRequest, userId: Long): WorkoutSessionDetailResponse {
+    fun update(
+        sessionId: Long,
+        request: WorkoutSessionPatchRequest,
+        userId: Long,
+    ): WorkoutSessionDetailResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
         val wasAlreadyCompleted = session.status == SessionStatus.COMPLETED
         request.status?.let { newStatus ->
             validateStatusTransition(session, newStatus, userId)
             session.status = newStatus
         }
-        val hasOtherFieldChanges = request.durationSeconds != null || request.totalVolumeKg != null ||
-            request.completedSets != null || request.totalSets != null || request.notes != null
+        val hasOtherFieldChanges =
+            request.durationSeconds != null ||
+                request.totalVolumeKg != null ||
+                request.completedSets != null ||
+                request.totalSets != null ||
+                request.notes != null
         if (wasAlreadyCompleted && hasOtherFieldChanges) {
             throw ConflictException("Cannot modify a completed session")
         }
@@ -109,33 +129,46 @@ class WorkoutSessionService(
         return session.toDetailResponse(sessionExercises)
     }
 
-    fun delete(sessionId: Long, userId: Long) {
+    fun delete(
+        sessionId: Long,
+        userId: Long,
+    ) {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
         workoutSessionRepository.delete(session)
     }
 
-    //SessionExercise
-    fun createSessionExercise(sessionId: Long, request: SessionExerciseRequest, userId: Long): SessionExerciseResponse {
+    // SessionExercise
+    fun createSessionExercise(
+        sessionId: Long,
+        request: SessionExerciseRequest,
+        userId: Long,
+    ): SessionExerciseResponse {
         val session = ownershipResolver.getOwnedWorkoutSession(sessionId, userId)
         requireSessionNotCompleted(session)
-        val exercise = exerciseRepository.findVisibleById(request.exerciseId, userId)
-            ?: throw NotFoundException("Exercise", request.exerciseId)
+        val exercise =
+            exerciseRepository.findVisibleById(request.exerciseId, userId)
+                ?: throw NotFoundException("Exercise", request.exerciseId)
 
-        val saved = sessionExerciseRepository.save(
-            SessionExercise(
-                exerciseId = exercise.exerciseId,
-                exerciseNameSnapshot = exercise.name,
-                inputTypeSnapshot = exercise.inputType,
-                isRepRange = request.isRepRange,
-                restDurationSeconds = request.restDurationSeconds,
-                sortOrder = request.sortOrder,
-                notes = request.notes
-            ).apply { workoutSession = session }
-        )
+        val saved =
+            sessionExerciseRepository.save(
+                SessionExercise(
+                    exerciseId = exercise.exerciseId,
+                    exerciseNameSnapshot = exercise.name,
+                    inputTypeSnapshot = exercise.inputType,
+                    isRepRange = request.isRepRange,
+                    restDurationSeconds = request.restDurationSeconds,
+                    sortOrder = request.sortOrder,
+                    notes = request.notes,
+                ).apply { workoutSession = session },
+            )
         return saved.toResponse(emptyList())
     }
 
-    fun updateSessionExercise(sessionExerciseId: Long, request: SessionExercisePatchRequest, userId: Long): SessionExerciseResponse {
+    fun updateSessionExercise(
+        sessionExerciseId: Long,
+        request: SessionExercisePatchRequest,
+        userId: Long,
+    ): SessionExerciseResponse {
         val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
         requireSessionNotCompleted(sessionExercise.workoutSession)
         request.sortOrder?.let { sessionExercise.sortOrder = it }
@@ -145,50 +178,69 @@ class WorkoutSessionService(
         return sessionExercise.toResponse(buildSessionSetResponses(sessionExercise))
     }
 
-    fun deleteSessionExercise(sessionExerciseId: Long, userId: Long) {
+    fun deleteSessionExercise(
+        sessionExerciseId: Long,
+        userId: Long,
+    ) {
         val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
         requireSessionNotCompleted(sessionExercise.workoutSession)
         sessionExerciseRepository.delete(sessionExercise)
     }
 
-    fun findPreviousPerformance(sessionExerciseId: Long, userId: Long): List<SessionSetResponse> {
+    fun findPreviousPerformance(
+        sessionExerciseId: Long,
+        userId: Long,
+    ): List<SessionSetResponse> {
         val sessionExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
         val workoutDayId = sessionExercise.workoutSession.workoutDayId ?: return emptyList()
         val exerciseId = sessionExercise.exerciseId ?: return emptyList()
 
-        val previousSession = workoutSessionRepository
-            .findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(userId, workoutDayId, SessionStatus.COMPLETED)
-            .firstOrNull { it.sessionId != sessionExercise.workoutSession.sessionId }
-            ?: return emptyList()
+        val previousSession =
+            workoutSessionRepository
+                .findTop2ByOwnerIdAndWorkoutDayIdAndStatusOrderByStartedAtDesc(userId, workoutDayId, SessionStatus.COMPLETED)
+                .firstOrNull { it.sessionId != sessionExercise.workoutSession.sessionId }
+                ?: return emptyList()
 
-        val previousExercise = sessionExerciseRepository.findByWorkoutSessionIn(listOf(previousSession))
-            .firstOrNull { it.exerciseId == exerciseId }
-            ?: return emptyList()
+        val previousExercise =
+            sessionExerciseRepository
+                .findByWorkoutSessionIn(listOf(previousSession))
+                .firstOrNull { it.exerciseId == exerciseId }
+                ?: return emptyList()
 
-        return sessionSetRepository.findBySessionExerciseIn(listOf(previousExercise))
+        return sessionSetRepository
+            .findBySessionExerciseIn(listOf(previousExercise))
             .sortedBy { it.sortOrder }
             .map { it.toResponse() }
     }
 
-    //SessionSet
-    fun createSessionSet(sessionExerciseId: Long, request: SessionSetRequest, userId: Long): SessionSetResponse {
+    // SessionSet
+    fun createSessionSet(
+        sessionExerciseId: Long,
+        request: SessionSetRequest,
+        userId: Long,
+    ): SessionSetResponse {
         val parentExercise = ownershipResolver.getOwnedSessionExercise(sessionExerciseId, userId)
         requireSessionNotCompleted(parentExercise.workoutSession)
         validateRepRange(request.targetReps, request.targetRepsMax)
-        val saved = sessionSetRepository.save(
-            SessionSet(
-                sortOrder = request.sortOrder,
-                setType = request.setType,
-                targetReps = request.targetReps,
-                targetRepsMax = request.targetRepsMax,
-                targetDurationSeconds = request.targetDurationSeconds,
-                isCompleted = false
-            ).apply { sessionExercise = parentExercise }
-        )
+        val saved =
+            sessionSetRepository.save(
+                SessionSet(
+                    sortOrder = request.sortOrder,
+                    setType = request.setType,
+                    targetReps = request.targetReps,
+                    targetRepsMax = request.targetRepsMax,
+                    targetDurationSeconds = request.targetDurationSeconds,
+                    isCompleted = false,
+                ).apply { sessionExercise = parentExercise },
+            )
         return saved.toResponse()
     }
 
-    fun updateSessionSet(sessionSetId: Long, request: SessionSetPatchRequest, userId: Long): SessionSetResponse {
+    fun updateSessionSet(
+        sessionSetId: Long,
+        request: SessionSetPatchRequest,
+        userId: Long,
+    ): SessionSetResponse {
         val sessionSet = ownershipResolver.getOwnedSessionSet(sessionSetId, userId)
         requireSessionNotCompleted(sessionSet.sessionExercise.workoutSession)
         request.sortOrder?.let { sessionSet.sortOrder = it }
@@ -201,13 +253,20 @@ class WorkoutSessionService(
         return sessionSet.toResponse()
     }
 
-    fun deleteSessionSet(sessionSetId: Long, userId: Long) {
+    fun deleteSessionSet(
+        sessionSetId: Long,
+        userId: Long,
+    ) {
         val sessionSet = ownershipResolver.getOwnedSessionSet(sessionSetId, userId)
         requireSessionNotCompleted(sessionSet.sessionExercise.workoutSession)
         sessionSetRepository.delete(sessionSet)
     }
 
-    private fun validateStatusTransition(session: WorkoutSession, newStatus: SessionStatus, userId: Long) {
+    private fun validateStatusTransition(
+        session: WorkoutSession,
+        newStatus: SessionStatus,
+        userId: Long,
+    ) {
         if (session.status == SessionStatus.COMPLETED && newStatus != SessionStatus.COMPLETED) {
             throw ConflictException("Cannot change the status of a completed session")
         }
@@ -225,7 +284,10 @@ class WorkoutSessionService(
         }
     }
 
-    private fun validateRepRange(targetReps: Int?, targetRepsMax: Int?) {
+    private fun validateRepRange(
+        targetReps: Int?,
+        targetRepsMax: Int?,
+    ) {
         if (targetReps != null && targetRepsMax != null && targetReps > targetRepsMax) {
             throw BadRequestException("targetReps must not exceed targetRepsMax")
         }
@@ -239,43 +301,47 @@ class WorkoutSessionService(
         val exercisesBySessionId = sessionExercises.groupBy { it.workoutSession.sessionId }
 
         return sessions.associate { session ->
-            session.sessionId to exercisesBySessionId[session.sessionId].orEmpty().sortedBy { it.sortOrder }.map { se ->
-                val sets = setsByExerciseId[se.sessionExerciseId].orEmpty().sortedBy { it.sortOrder }.map { it.toResponse() }
-                se.toResponse(sets)
-            }
+            session.sessionId to
+                exercisesBySessionId[session.sessionId].orEmpty().sortedBy { it.sortOrder }.map { se ->
+                    val sets = setsByExerciseId[se.sessionExerciseId].orEmpty().sortedBy { it.sortOrder }.map { it.toResponse() }
+                    se.toResponse(sets)
+                }
         }
     }
 
     private fun buildSessionSetResponses(sessionExercise: SessionExercise): List<SessionSetResponse> =
         sessionExercise.sets.sortedBy { it.sortOrder }.map { it.toResponse() }
 
-    private fun WorkoutSession.toDetailResponse(sessionExercises: List<SessionExerciseResponse>) = WorkoutSessionDetailResponse(
-        session = toWorkoutSessionResponse(),
-        sessionExercises = sessionExercises
-    )
+    private fun WorkoutSession.toDetailResponse(sessionExercises: List<SessionExerciseResponse>) =
+        WorkoutSessionDetailResponse(
+            session = toWorkoutSessionResponse(),
+            sessionExercises = sessionExercises,
+        )
 
-    private fun SessionExercise.toResponse(sets: List<SessionSetResponse>) = SessionExerciseResponse(
-        sessionExerciseId = sessionExerciseId,
-        exerciseId = exerciseId,
-        exerciseNameSnapshot = exerciseNameSnapshot,
-        inputTypeSnapshot = inputTypeSnapshot,
-        isRepRange = isRepRange,
-        restDurationSeconds = restDurationSeconds,
-        sortOrder = sortOrder,
-        notes = notes,
-        sets = sets
-    )
+    private fun SessionExercise.toResponse(sets: List<SessionSetResponse>) =
+        SessionExerciseResponse(
+            sessionExerciseId = sessionExerciseId,
+            exerciseId = exerciseId,
+            exerciseNameSnapshot = exerciseNameSnapshot,
+            inputTypeSnapshot = inputTypeSnapshot,
+            isRepRange = isRepRange,
+            restDurationSeconds = restDurationSeconds,
+            sortOrder = sortOrder,
+            notes = notes,
+            sets = sets,
+        )
 
-    private fun SessionSet.toResponse() = SessionSetResponse(
-        sessionSetId = sessionSetId,
-        sortOrder = sortOrder,
-        setType = setType,
-        targetReps = targetReps,
-        targetRepsMax = targetRepsMax,
-        targetDurationSeconds = targetDurationSeconds,
-        reps = reps,
-        weightKg = weightKg,
-        durationSeconds = durationSeconds,
-        isCompleted = isCompleted
-    )
+    private fun SessionSet.toResponse() =
+        SessionSetResponse(
+            sessionSetId = sessionSetId,
+            sortOrder = sortOrder,
+            setType = setType,
+            targetReps = targetReps,
+            targetRepsMax = targetRepsMax,
+            targetDurationSeconds = targetDurationSeconds,
+            reps = reps,
+            weightKg = weightKg,
+            durationSeconds = durationSeconds,
+            isCompleted = isCompleted,
+        )
 }

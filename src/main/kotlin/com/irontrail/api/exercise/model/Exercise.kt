@@ -17,36 +17,28 @@ import jakarta.persistence.Table
 class Exercise(
     @Column(name = "wger_id")
     var wgerId: Int?,
-
     var name: String,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "primary_muscle_group")
     var primaryMuscleGroup: MuscleGroup,
-
     @ElementCollection
     @CollectionTable(
         name = "exercise_secondary_muscle_groups",
-        joinColumns = [JoinColumn(name = "exercise_id")]
+        joinColumns = [JoinColumn(name = "exercise_id")],
     )
     @Enumerated(EnumType.STRING)
     @Column(name = "muscle_group")
     var secondaryMuscleGroups: List<MuscleGroup>,
-
     @Enumerated(EnumType.STRING)
     var equipment: Equipment,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "input_type")
     var inputType: ExerciseInputType,
-
     var description: String?,
-
     @Column(name = "image_url")
     var imageUrl: String?,
-
     @Column(name = "owner_id")
-    var ownerId: Long?
+    var ownerId: Long?,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

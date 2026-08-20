@@ -17,7 +17,6 @@ import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 import java.time.OffsetDateTime
 
 class SessionSetRepositoryTest : RepositoryTestBase() {
-
     @Autowired
     lateinit var entityManager: TestEntityManager
 
@@ -27,23 +26,29 @@ class SessionSetRepositoryTest : RepositoryTestBase() {
     private fun persistUser(): Long =
         entityManager.persistAndFlush(User(email = "user-${System.nanoTime()}@test.com", passwordHash = "hash")).userId
 
-    private fun persistSession(ownerId: Long): WorkoutSession = entityManager.persistAndFlush(
-        WorkoutSession(ownerId = ownerId, startedAt = OffsetDateTime.now(), durationSeconds = 0, status = SessionStatus.COMPLETED)
-    )
+    private fun persistSession(ownerId: Long): WorkoutSession =
+        entityManager.persistAndFlush(
+            WorkoutSession(ownerId = ownerId, startedAt = OffsetDateTime.now(), durationSeconds = 0, status = SessionStatus.COMPLETED),
+        )
 
-    private fun persistSessionExercise(session: WorkoutSession): SessionExercise = entityManager.persistAndFlush(
-        SessionExercise(
-            exerciseNameSnapshot = "Bench Press",
-            inputTypeSnapshot = ExerciseInputType.REPS,
-            isRepRange = true,
-            restDurationSeconds = 90,
-            sortOrder = 0
-        ).apply { workoutSession = session }
-    )
+    private fun persistSessionExercise(session: WorkoutSession): SessionExercise =
+        entityManager.persistAndFlush(
+            SessionExercise(
+                exerciseNameSnapshot = "Bench Press",
+                inputTypeSnapshot = ExerciseInputType.REPS,
+                isRepRange = true,
+                restDurationSeconds = 90,
+                sortOrder = 0,
+            ).apply { workoutSession = session },
+        )
 
-    private fun persistSessionSet(parent: SessionExercise, reps: Int? = 8): SessionSet = entityManager.persistAndFlush(
-        SessionSet(sortOrder = 0, setType = SetType.NORMAL, reps = reps, isCompleted = true).apply { sessionExercise = parent }
-    )
+    private fun persistSessionSet(
+        parent: SessionExercise,
+        reps: Int? = 8,
+    ): SessionSet =
+        entityManager.persistAndFlush(
+            SessionSet(sortOrder = 0, setType = SetType.NORMAL, reps = reps, isCompleted = true).apply { sessionExercise = parent },
+        )
 
     // ---- findBySessionExerciseIn ----
 

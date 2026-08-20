@@ -20,7 +20,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.MediaType
@@ -35,7 +34,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.OffsetDateTime
 
 class WorkoutSessionControllerTest {
-
     private val workoutSessionService: WorkoutSessionService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(WorkoutSessionController(workoutSessionService)).build()
 
@@ -45,7 +43,10 @@ class WorkoutSessionControllerTest {
     @AfterEach
     fun clearAuth() = clearAuthentication()
 
-    private fun sessionResponse(id: Long = 1L, status: SessionStatus = SessionStatus.ACTIVE) = WorkoutSessionResponse(
+    private fun sessionResponse(
+        id: Long = 1L,
+        status: SessionStatus = SessionStatus.ACTIVE,
+    ) = WorkoutSessionResponse(
         sessionId = id,
         workoutDayId = null,
         splitNameSnapshot = null,
@@ -56,11 +57,13 @@ class WorkoutSessionControllerTest {
         completedSets = null,
         totalSets = null,
         notes = null,
-        status = status
+        status = status,
     )
 
-    private fun detailResponse(id: Long = 1L, status: SessionStatus = SessionStatus.ACTIVE) =
-        WorkoutSessionDetailResponse(sessionResponse(id, status), emptyList())
+    private fun detailResponse(
+        id: Long = 1L,
+        status: SessionStatus = SessionStatus.ACTIVE,
+    ) = WorkoutSessionDetailResponse(sessionResponse(id, status), emptyList())
 
     // ---- findAll ----
 
@@ -68,7 +71,8 @@ class WorkoutSessionControllerTest {
     fun `GET list returns 200 with the caller's sessions`() {
         whenever(workoutSessionService.findAll(10L, null)).thenReturn(listOf(sessionResponse()))
 
-        mockMvc.perform(get("/v1/workout-sessions"))
+        mockMvc
+            .perform(get("/v1/workout-sessions"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].sessionId").value(1))
     }
@@ -95,7 +99,8 @@ class WorkoutSessionControllerTest {
     fun `GET active returns 204 with no body when there's no active session`() {
         whenever(workoutSessionService.findActive(10L)).thenReturn(null)
 
-        mockMvc.perform(get("/v1/workout-sessions/active"))
+        mockMvc
+            .perform(get("/v1/workout-sessions/active"))
             .andExpect(status().isNoContent)
             .andExpect(content().string(""))
     }
@@ -123,16 +128,18 @@ class WorkoutSessionControllerTest {
         whenever(workoutSessionService.create(eq(WorkoutSessionRequest(workoutDayId = 5L)), eq(10L)))
             .thenReturn(detailResponse())
 
-        mockMvc.perform(
-            post("/v1/workout-sessions").contentType(MediaType.APPLICATION_JSON).content("""{"workoutDayId":5}""")
-        ).andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/workout-sessions").contentType(MediaType.APPLICATION_JSON).content("""{"workoutDayId":5}"""),
+            ).andExpect(status().isCreated)
     }
 
     @Test
     fun `POST returns 409 when the caller already has an active session`() {
         whenever(workoutSessionService.create(any(), eq(10L))).thenThrow(ConflictException("Active session already exists"))
 
-        mockMvc.perform(post("/v1/workout-sessions").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(post("/v1/workout-sessions").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isConflict)
     }
 
@@ -143,18 +150,22 @@ class WorkoutSessionControllerTest {
         whenever(workoutSessionService.update(eq(1L), eq(WorkoutSessionPatchRequest(status = SessionStatus.COMPLETED)), eq(10L)))
             .thenReturn(detailResponse(status = SessionStatus.COMPLETED))
 
-        mockMvc.perform(
-            patch("/v1/workout-sessions/1").contentType(MediaType.APPLICATION_JSON).content("""{"status":"COMPLETED"}""")
-        ).andExpect(status().isOk)
+        mockMvc
+            .perform(
+                patch("/v1/workout-sessions/1").contentType(MediaType.APPLICATION_JSON).content("""{"status":"COMPLETED"}"""),
+            ).andExpect(status().isOk)
     }
 
     @Test
     fun `PATCH attempting to reopen a completed session returns 409`() {
-        whenever(workoutSessionService.update(eq(1L), any(), eq(10L))).thenThrow(ConflictException("Session is COMPLETED and cannot be reopened"))
+        whenever(
+            workoutSessionService.update(eq(1L), any(), eq(10L)),
+        ).thenThrow(ConflictException("Session is COMPLETED and cannot be reopened"))
 
-        mockMvc.perform(
-            patch("/v1/workout-sessions/1").contentType(MediaType.APPLICATION_JSON).content("""{"status":"ACTIVE"}""")
-        ).andExpect(status().isConflict)
+        mockMvc
+            .perform(
+                patch("/v1/workout-sessions/1").contentType(MediaType.APPLICATION_JSON).content("""{"status":"ACTIVE"}"""),
+            ).andExpect(status().isConflict)
     }
 
     // ---- delete ----
@@ -179,15 +190,25 @@ class WorkoutSessionControllerTest {
     fun `POST session-exercises returns 201 under the given session`() {
         val request = SessionExerciseRequest(exerciseId = 500L, isRepRange = true, restDurationSeconds = 90, sortOrder = 0)
         whenever(workoutSessionService.createSessionExercise(eq(1L), eq(request), eq(10L))).thenReturn(
-            SessionExerciseResponse(100L, 500L, "Bench Press", com.irontrail.api.exercise.model.ExerciseInputType.REPS, true, 90, 0, null, emptyList())
+            SessionExerciseResponse(
+                100L,
+                500L,
+                "Bench Press",
+                com.irontrail.api.exercise.model.ExerciseInputType.REPS,
+                true,
+                90,
+                0,
+                null,
+                emptyList(),
+            ),
         )
 
-        mockMvc.perform(
-            post("/v1/workout-sessions/1/session-exercises")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"exerciseId":500,"isRepRange":true,"restDurationSeconds":90,"sortOrder":0}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/workout-sessions/1/session-exercises")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"exerciseId":500,"isRepRange":true,"restDurationSeconds":90,"sortOrder":0}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.sessionExerciseId").value(100))
     }
 
@@ -195,10 +216,11 @@ class WorkoutSessionControllerTest {
     fun `POST session-exercises returns 404 when the parent session isn't owned by the caller`() {
         whenever(workoutSessionService.createSessionExercise(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("WorkoutSession", 1L))
 
-        mockMvc.perform(
-            post("/v1/workout-sessions/1/session-exercises")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"exerciseId":500,"isRepRange":true,"restDurationSeconds":90,"sortOrder":0}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/workout-sessions/1/session-exercises")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"exerciseId":500,"isRepRange":true,"restDurationSeconds":90,"sortOrder":0}"""),
+            ).andExpect(status().isNotFound)
     }
 }

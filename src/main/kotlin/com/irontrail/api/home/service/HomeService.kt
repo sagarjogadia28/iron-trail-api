@@ -24,43 +24,58 @@ class HomeService(
     private val splitRepository: SplitRepository,
     private val workoutDayRepository: WorkoutDayRepository,
     private val templateExerciseRepository: TemplateExerciseRepository,
-    private val workoutSessionRepository: WorkoutSessionRepository
+    private val workoutSessionRepository: WorkoutSessionRepository,
 ) {
     fun getHome(userId: Long): HomeResponse {
         val activeSplitId = userProfileRepository.findById(userId).orElse(null)?.activeSplitId
         val nextWorkout = activeSplitId?.let { buildNextWorkout(it, userId) }
 
         val now = OffsetDateTime.now()
-        val startOfMonth = now.withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
-        val monthSessions = workoutSessionRepository
-            .findByOwnerIdAndStatusAndStartedAtAfter(userId, SessionStatus.COMPLETED, startOfMonth)
+        val startOfMonth =
+            now
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0)
+        val monthSessions =
+            workoutSessionRepository
+                .findByOwnerIdAndStatusAndStartedAtAfter(userId, SessionStatus.COMPLETED, startOfMonth)
         val trainedDates = monthSessions.map { it.startedAt.toLocalDate() }.distinct().sorted()
 
-        val streakSessions = workoutSessionRepository
-            .findByOwnerIdAndStatusAndStartedAtAfter(userId, SessionStatus.COMPLETED, now.minusYears(2))
+        val streakSessions =
+            workoutSessionRepository
+                .findByOwnerIdAndStatusAndStartedAtAfter(userId, SessionStatus.COMPLETED, now.minusYears(2))
         val weekStreak = computeWeekStreak(streakSessions.map { it.startedAt.toLocalDate() }.toSet())
 
-        val recentWorkouts = workoutSessionRepository
-            .findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(userId, SessionStatus.COMPLETED)
-            .map { it.toWorkoutSessionResponse() }
+        val recentWorkouts =
+            workoutSessionRepository
+                .findTop3ByOwnerIdAndStatusOrderByStartedAtDesc(userId, SessionStatus.COMPLETED)
+                .map { it.toWorkoutSessionResponse() }
 
         return HomeResponse(
             nextWorkout = nextWorkout,
             trainedDatesThisMonth = trainedDates,
             workoutsThisMonth = monthSessions.size,
             weekStreak = weekStreak,
-            recentWorkouts = recentWorkouts
+            recentWorkouts = recentWorkouts,
         )
     }
 
-    private fun buildNextWorkout(splitId: Long, userId: Long): NextWorkoutResponse? {
+    private fun buildNextWorkout(
+        splitId: Long,
+        userId: Long,
+    ): NextWorkoutResponse? {
         val split = splitRepository.findById(splitId).orElse(null) ?: return null
         val days = workoutDayRepository.findBySplitIdIn(listOf(splitId)).sortedBy { it.sortOrder }
         if (days.isEmpty()) return null
 
-        val lastCompleted = workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
-            userId, days.map { it.workoutDayId }, SessionStatus.COMPLETED
-        )
+        val lastCompleted =
+            workoutSessionRepository.findTopByOwnerIdAndWorkoutDayIdInAndStatusOrderByStartedAtDesc(
+                userId,
+                days.map { it.workoutDayId },
+                SessionStatus.COMPLETED,
+            )
         val nextDay = nextDayAfter(days, lastCompleted)
         val exerciseCount = templateExerciseRepository.findByWorkoutDayIdIn(listOf(nextDay.workoutDayId)).size
 
@@ -68,11 +83,14 @@ class HomeService(
             workoutDayId = nextDay.workoutDayId,
             workoutDayName = nextDay.name,
             splitName = split.name,
-            exerciseCount = exerciseCount
+            exerciseCount = exerciseCount,
         )
     }
 
-    private fun nextDayAfter(days: List<WorkoutDay>, lastCompleted: WorkoutSession?): WorkoutDay {
+    private fun nextDayAfter(
+        days: List<WorkoutDay>,
+        lastCompleted: WorkoutSession?,
+    ): WorkoutDay {
         if (lastCompleted == null) return days.first()
         val lastIndex = days.indexOfFirst { it.workoutDayId == lastCompleted.workoutDayId }
         if (lastIndex == -1) return days.first()

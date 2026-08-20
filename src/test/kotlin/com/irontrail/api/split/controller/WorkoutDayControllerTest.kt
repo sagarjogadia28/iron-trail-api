@@ -29,7 +29,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 class WorkoutDayControllerTest {
-
     private val splitService: SplitService = mock()
     private val mockMvc: MockMvc = standaloneMvcBuilder(WorkoutDayController(splitService)).build()
 
@@ -46,14 +45,16 @@ class WorkoutDayControllerTest {
         whenever(splitService.updateWorkoutDay(eq(1L), eq(WorkoutDayPatchRequest(name = "Renamed")), eq(10L)))
             .thenReturn(WorkoutDayResponse(1L, "Renamed", 0, emptyList()))
 
-        mockMvc.perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Renamed"}"""))
+        mockMvc
+            .perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"Renamed"}"""))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.name").value("Renamed"))
     }
 
     @Test
     fun `PATCH with a blank name returns 400 and never calls the service`() {
-        mockMvc.perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"   "}"""))
+        mockMvc
+            .perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("""{"name":"   "}"""))
             .andExpect(status().isBadRequest)
 
         verify(splitService, never()).updateWorkoutDay(any(), any(), any())
@@ -63,7 +64,8 @@ class WorkoutDayControllerTest {
     fun `PATCH returns 404 when not owned by the caller`() {
         whenever(splitService.updateWorkoutDay(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("WorkoutDay", 1L))
 
-        mockMvc.perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        mockMvc
+            .perform(patch("/v1/workout-days/1").contentType(MediaType.APPLICATION_JSON).content("{}"))
             .andExpect(status().isNotFound)
     }
 
@@ -90,12 +92,12 @@ class WorkoutDayControllerTest {
         whenever(splitService.duplicateWorkoutDay(eq(1L), eq(WorkoutDayRequest("Push (Copy)", 1)), eq(10L)))
             .thenReturn(WorkoutDayResponse(2L, "Push (Copy)", 1, emptyList()))
 
-        mockMvc.perform(
-            post("/v1/workout-days/1/duplicate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Push (Copy)","sortOrder":1}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/workout-days/1/duplicate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Push (Copy)","sortOrder":1}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.workoutDayId").value(2))
     }
 
@@ -103,11 +105,12 @@ class WorkoutDayControllerTest {
     fun `POST duplicate returns 404 when the source day isn't owned by the caller`() {
         whenever(splitService.duplicateWorkoutDay(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("WorkoutDay", 1L))
 
-        mockMvc.perform(
-            post("/v1/workout-days/1/duplicate")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"name":"Copy","sortOrder":0}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/workout-days/1/duplicate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"name":"Copy","sortOrder":0}"""),
+            ).andExpect(status().isNotFound)
     }
 
     // ---- createTemplateExercise ----
@@ -118,12 +121,12 @@ class WorkoutDayControllerTest {
         whenever(splitService.createTemplateExercise(eq(1L), eq(request), eq(10L)))
             .thenReturn(TemplateExerciseResponse(100L, 500L, 0, 90, true, null, emptyList()))
 
-        mockMvc.perform(
-            post("/v1/workout-days/1/template-exercises")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"exerciseId":500,"sortOrder":0}""")
-        )
-            .andExpect(status().isCreated)
+        mockMvc
+            .perform(
+                post("/v1/workout-days/1/template-exercises")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"exerciseId":500,"sortOrder":0}"""),
+            ).andExpect(status().isCreated)
             .andExpect(jsonPath("$.templateExerciseId").value(100))
     }
 
@@ -131,10 +134,11 @@ class WorkoutDayControllerTest {
     fun `POST template-exercises returns 404 when the referenced exercise isn't visible to the caller`() {
         whenever(splitService.createTemplateExercise(eq(1L), any(), eq(10L))).thenThrow(NotFoundException("Exercise", 500L))
 
-        mockMvc.perform(
-            post("/v1/workout-days/1/template-exercises")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""{"exerciseId":500,"sortOrder":0}""")
-        ).andExpect(status().isNotFound)
+        mockMvc
+            .perform(
+                post("/v1/workout-days/1/template-exercises")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""{"exerciseId":500,"sortOrder":0}"""),
+            ).andExpect(status().isNotFound)
     }
 }

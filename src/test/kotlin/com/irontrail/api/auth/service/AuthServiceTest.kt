@@ -24,7 +24,6 @@ import org.springframework.security.crypto.password.PasswordEncoder
 
 @ExtendWith(MockitoExtension::class)
 class AuthServiceTest {
-
     private val userRepository: UserRepository = mock()
     private val passwordEncoder: PasswordEncoder = mock()
     private val authenticationManager: AuthenticationManager = mock()
@@ -32,8 +31,10 @@ class AuthServiceTest {
 
     private val authService = AuthService(userRepository, passwordEncoder, authenticationManager, jwtService)
 
-    private fun savedUser(id: Long = 1L, email: String = "john@gmail.com") =
-        User(email = email, passwordHash = "hashed").apply { userId = id }
+    private fun savedUser(
+        id: Long = 1L,
+        email: String = "john@gmail.com",
+    ) = User(email = email, passwordHash = "hashed").apply { userId = id }
 
     @BeforeEach
     fun stubJwt() {

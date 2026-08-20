@@ -12,8 +12,7 @@ import jakarta.persistence.Table
 class Split(
     @Column(name = "owner_id")
     var ownerId: Long,
-
-    var name: String
+    var name: String,
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
